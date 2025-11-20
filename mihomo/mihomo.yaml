@@ -97,23 +97,14 @@ dns:
     - tls://223.6.6.6
 
 # 规则匹配到直连时使用的DNS，既然是可以直连的，当然要用国内DNS    
-#  direct-nameserver:           
-#    - https://dns.alidns.com/dns-query
-#    - https://doh.pub/dns-query
+  direct-nameserver:           
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
 
 # 解析代理节点时使用的DNS，为了使下面的respect-rules生效必须设置，最好设置为国内DNS，否则在代理的第一步就可能因为连接不上国外DNS而解析不出代理节点的IP，最终倒在起点
   proxy-server-nameserver:         
     - https://dns.alidns.com/dns-query
     - https://doh.pub/dns-query
-
-# 强制指定策略组使用固定的dns解析，和上面那个匹配直连冲突，选择一个使用，我把直连注释了，因为使用直连那个会并发查询dns，导致国外dns返回快的话会使用国外地址访问国内的网站
-  nameserver-policy:
-    geosite:cn:
-       - https://dns.alidns.com/dns-query
-       - https://doh.pub/dns-query
-    rule-set:fakeip过滤,自用直连,直连域名,私有域名:
-       - https://dns.alidns.com/dns-query
-       - https://doh.pub/dns-query
         
 # 在访问的国外网站没有匹配到任何域名规则，最终走了MATCH兜底规则时使用的DNS，为了确保不发生DNS泄漏和DNS污染，必须使用国外DNS
 # 说人话就是上面开启了遵循路由规则，DNS请求会匹配自己写的规则，没匹配到的会用这个DNS，所以写国外的防止DNS泄露
