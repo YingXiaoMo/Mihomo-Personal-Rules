@@ -187,11 +187,8 @@ rules:
   - RULE-SET,私有域名 ,🎯 全球直连
   - RULE-SET,直连软件,🎯 全球直连
   - RULE-SET,Steam下载,🎯 全球直连
-  - RULE-SET,Steam,🎮 游戏平台
-  - RULE-SET,Epic,🎮 游戏平台
-  - RULE-SET,EA,🎮 游戏平台
+  - RULE-SET,游戏下载,🎯 全球直连
   - RULE-SET,游戏平台,🎮 游戏平台
-  - RULE-SET,steam社区,🎮 steam社区
   - RULE-SET,BT下载,🎯 全球直连
   - RULE-SET,电报域名,📲 电报消息
   - RULE-SET,GitHub,🌪 GitHub
@@ -227,11 +224,8 @@ rule-anchor:
   class: &class {type: http, interval: 86400, behavior: classical, format: text}
 rule-providers: 
   fakeip过滤: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/fakeip-filter.mrs"}  
-  steam社区: { <<: *class, url: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/Self-use-rules/steamCommunity.list"} 
-  Steam下载: { <<: *class, url: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/Self-use-rules/steamdownload.list"} 
-  Steam: {<<: *domain, url: "https://gh-proxy.com/github.com/metacubex/meta-rules-dat/raw/refs/heads/meta/geo/geosite/steam.mrs"}
-  Epic: {<<: *class, url: "https://gh-proxy.com/raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Epic/Epic.list"}
-  EA: {<<: *class, url: "https://gh-proxy.com/raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/EA/EA.list"}
+  游戏平台: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games.mrs"} 
+  游戏下载: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games-cn.mrs"} 
   游戏平台: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games-cn.mrs"} 
   私有域名: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/private.mrs"} 
   BT下载: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/trackerslist.mrs"} 
