@@ -29,12 +29,6 @@ proxy-providers:
     proxy: 直连
 
 
-# 节点信息
-proxies:
-  - { name: 直连, type: direct,udp: true, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Direct.png" }
-
-
-
 # 全局配置
 port: 7890                                                         # HTTP(S) 代理端口
 socks-port: 7891                                                   # SOCKS5 代理端口 
@@ -154,47 +148,47 @@ RR: &RR { type: load-balance, strategy: round-robin, include-all: true, <<: *Che
 CH: &CH { type: load-balance, strategy: consistent-hashing, include-all: true, <<: *Check, exclude-type: direct }
 
 proxy-groups:
-  - { name:  漏网之鱼, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/match.png" }
-  - { name:  自用代理, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/my.png" } 
-  - { name:  Emby, <<: *Emby, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Emby.png" }  
-  - { name:  游戏平台, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Steam.png" } 
-  - { name:  GitHub, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/GitHub.png" } 
-  - { name:  电报消息, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Telegram.png" } 
-  - { name:  AI服务, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/AI.png" } 
-  - { name:  ChatGPT, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/ChatGPT.png" } 
-  - { name:  Claude, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Claude.png" } 
-  - { name:  MetaAI, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/MetaAI.png" } 
-  - { name:  Perplexity, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Perplexity.png" } 
-  - { name:  Gemini, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Gemini.png" } 
-  - { name:  Copilot, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Copilot.png" }   
-  - { name:  油管视频, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/YouTube.png" } 
-  - { name:  谷歌服务, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Google.png" } 
-  - { name:  微软云盘, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/OneDrive.png" } 
-  - { name:  微软服务, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Microsoft.png" } 
-  - { name:  网络测试, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Speedtest.png" } 
-  - { name:  Twitter, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Twitter.png" } 
-  - { name:  Bybit, <<: *Bybit, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Bybit.png" } 
-  - { name:  TikTok, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Tiktok.png" } 
-  - { name:  代理域名, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Global.png" } 
-
+  - { name: 漏网之鱼, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/match.png" }
+  - { name: 自用代理, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/my.png" } 
+  - { name: Emby, <<: *Emby, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Emby.png" }  
+  - { name: 游戏平台, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Steam.png" } 
+  - { name: GitHub, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/GitHub.png" } 
+  - { name: 电报消息, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Telegram.png" } 
+  - { name: AI服务, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/AI.png" } 
+  - { name: ChatGPT, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/ChatGPT.png" } 
+  - { name: Claude, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Claude.png" } 
+  - { name: MetaAI, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/MetaAI.png" } 
+  - { name: Perplexity, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Perplexity.png" } 
+  - { name: Gemini, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Gemini.png" } 
+  - { name: Copilot, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Copilot.png" }   
+  - { name: 油管视频, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/YouTube.png" } 
+  - { name: 谷歌服务, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Google.png" } 
+  - { name: 微软云盘, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/OneDrive.png" } 
+  - { name: 微软服务, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Microsoft.png" } 
+  - { name: 网络测试, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Speedtest.png" } 
+  - { name: Twitter, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Twitter.png" } 
+  - { name: Bybit, <<: *Bybit, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Bybit.png" } 
+  - { name: TikTok, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Tiktok.png" } 
+  - { name: 代理域名, <<: *all, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Global.png" } 
+  - { name: 直连, type: select, proxies: [DIRECT], hidden: true, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Direct.png" }
 # 全部节点  
-  - { name:  全部手动, <<: *Select, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Proxy.png" } 
-# - { name:  全部自动, <<: *Url-Test, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Auto.png" }  
-# - { name:  全部智能, <<: *Smart, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Magic.png" }
-# - { name:  轮询负载, <<: *RR, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Round_Robin.png" }
-# - { name:  散列负载, <<: *CH, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Final.png" }
+  - { name: 全部手动, <<: *Select, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Proxy.png" } 
+# - { name: 全部自动, <<: *Url-Test, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Auto.png" }  
+# - { name: 全部智能, <<: *Smart, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Magic.png" }
+# - { name: 轮询负载, <<: *RR, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Round_Robin.png" }
+# - { name: 散列负载, <<: *CH, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Final.png" }
 
 # 手动选择
-  - { name:  新加坡手动, <<: *Select, <<: *SG, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Singapore.png" } 
-  - { name:  香港手动, <<: *Select, <<: *HK, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Hong_Kong.png" }
-  - { name:  日本手动, <<: *Select, <<: *JP, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Japan.png" }
-  - { name:  美国手动, <<: *Select, <<: *US, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/United_States.png" } 
-  - { name:  Emby手动, <<: *Select, <<: *E, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Emby.png"}
-  - { name:  其他手动, <<: *Select, <<: *Other, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Puzzle.png"} 
-  - { name:  自建手动, <<: *Select, <<: *ZJ, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Daily.png"} 
+  - { name: 新加坡手动, <<: *Select, <<: *SG, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Singapore.png" } 
+  - { name: 香港手动, <<: *Select, <<: *HK, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Hong_Kong.png" }
+  - { name: 日本手动, <<: *Select, <<: *JP, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Japan.png" }
+  - { name: 美国手动, <<: *Select, <<: *US, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/United_States.png" } 
+  - { name: Emby手动, <<: *Select, <<: *E, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Emby.png"}
+  - { name: 其他手动, <<: *Select, <<: *Other, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Puzzle.png"} 
+  - { name: 自建手动, <<: *Select, <<: *ZJ, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Daily.png"} 
 
 # 💰 Bybit
-  - { name:  Bybit服务, <<: *Select, <<: *B, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Bitcoin.png"} 
+  - { name: Bybit服务, <<: *Select, <<: *B, icon: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/icons/Bitcoin.png"} 
 
 
 # 故障转移
