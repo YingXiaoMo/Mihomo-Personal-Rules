@@ -1,3 +1,12 @@
+# 规则并不是越多越好，在满足自己需求情况下，尽量做到精简，不要过度复杂，以免影响性能。
+
+# 仅自用，要用的可以根据自己需求修改一下。
+
+
+
+
+
+
 # 锚点部分
 # 连通性检查通用锚点
 Check: &Check { url: https://www.gstatic.com/generate_204, interval: 180, timeout: 5000, tolerance: 20, lazy: false } 
@@ -6,8 +15,18 @@ Dns: &Dns [ "tls://223.5.5.5", "tls://223.6.6.6" ]
 Dns-Direct: &Dns-Direct [ "https://dns.alidns.com/dns-query", "https://doh.pub/dns-query" ]
 Dns-Proxy: &Dns-Proxy [ "https://cloudflare-dns.com/dns-query", "https://dns.google/dns-query" ]
 
-# 机场订阅
 
+
+# 机场订阅（所有订阅统一写在同一个 proxy-providers 块中，有多个机场就复制一下，修改"机场订阅"和"Airport1"不要重名即可）
+proxy-providers:
+  Airport1:
+    url: "机场订阅"
+    type: http
+    interval: 86400
+    health-check:
+      enable: true
+      <<: *Check
+    proxy: 直连
 
 
 # 节点信息
@@ -214,16 +233,10 @@ proxy-groups:
 
 # 规则匹配
 rules:
-  - IP-CIDR,175.178.228.101/32, 直连
-  - IP-CIDR,111.119.232.71/32,  全部手动
   - RULE-SET,私有域名 , 直连
   - RULE-SET,GTA, 直连
-  - RULE-SET,自用直连, 直连
   - RULE-SET,直连软件, 直连
   - RULE-SET,网络测试, 网络测试
-  - RULE-SET,广告, REJECT
-  - RULE-SET,自用代理, 自用代理
-  - RULE-SET,自用Emby, Emby
   - RULE-SET,游戏下载, 直连
   - RULE-SET,游戏平台, 游戏平台
   - RULE-SET,BT下载, 直连
@@ -266,9 +279,6 @@ rule-anchor:
 rule-providers: 
   fakeip过滤: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/fakeip-filter.mrs"}  
   GTA: { <<: *class, url: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/Self-use-rules/gta.list"} 
-  自用直连: { <<: *class, url: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/Self-use-rules/mydiret.list"} 
-  自用代理: { <<: *class, url: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/Self-use-rules/myproxy.list"} 
-  自用Emby: { <<: *class, url: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/Self-use-rules/emby.list"} 
   游戏下载: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games-cn.mrs"} 
   游戏平台: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games.mrs"} 
   私有域名: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/private.mrs"} 
@@ -301,5 +311,3 @@ rule-providers:
   国内ip: { <<: *ip, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/cnip.mrs"} 
   谷歌ip: { <<: *ip, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/google.mrs"} 
   电报ip: { <<: *ip, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/telegramip.mrs"} 
-  
-  广告: { <<: *domain_text, url: "https://raw.githubusercontent.com/YingXiaoMo/Mihomo-Personal-Rules/refs/heads/main/Self-use-rules/uaaad.list"} 
