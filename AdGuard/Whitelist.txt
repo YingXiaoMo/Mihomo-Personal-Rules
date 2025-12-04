@@ -1,0 +1,6 @@
+! 适用于 AdGuard、AdGuardHome 的自用白名单
+
+! 仅自用
+
+@@||qq.com^
+@@||163.com^

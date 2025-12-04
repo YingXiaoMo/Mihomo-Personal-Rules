@@ -1,0 +1,27 @@
+! 适用于 AdGuard、AdGuardHome 的去广告自用规则
+
+! 仅自用
+
+
+
+||tmg2839cez.cc^
+||kba53.cc^
+||tbl31794km.cc^
+||321308.lol^
+||tbl3212vbc.cc^
+||tmg2934v9c.cc^
+||xxmxlwr.com^
+||uwnfqva.com^
+||xhslg243.vip^
+||gravelrewashscarring.com^
+||y0pm2zys.xyz^
+||vserxxs.com^
+||mefaqfj.xyz^
+||509428.com^
+||thx00265qw.cc^
+||avtaohua-t1588.cc^
+||033210.xyz^
+||thx0025jhu.cc^
+||guidepaparazzisurface.com^
+||uijtxfd.com^
+||tvrhowq.com^

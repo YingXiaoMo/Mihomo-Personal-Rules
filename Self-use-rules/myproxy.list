@@ -1,0 +1,17 @@
+
+DOMAIN-SUFFIX,azureedge.net
+DOMAIN-SUFFIX,uaa.com
+DOMAIN-SUFFIX,hanime1.me
+DOMAIN-SUFFIX,huafei888.site
+
+# vercel
+DOMAIN-SUFFIX,vercel.com
+
+
+DOMAIN,hub.docker.com
+DOMAIN,services.googleapis.cn
+DOMAIN,xn--ngstr-lra8j.com
+
+
+DOMAIN-SUFFIX,spaceship.com
+DOMAIN-SUFFIX,spaceship-cdn.com

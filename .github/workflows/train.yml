@@ -1,0 +1,203 @@
+name: Train and Deploy Smart Model
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Smart/**'
+      - '.github/workflows/train.yml'
+  schedule:
+    - cron: '30 22 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  train_and_deploy:
+    runs-on: ubuntu-latest
+    env:
+      RCLONE_CONFIG_B64: ${{ secrets.RCLONE_CONFIG_B64 }}
+      REMOTE: ${{ secrets.REMOTE }}
+      LATEST_TAG: smart-model
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r Smart/scripts/requirements.txt
+
+      - name: Set up rclone config
+        run: |
+          echo "$RCLONE_CONFIG_B64" | base64 -d > rclone.conf
+
+      - name: Download and Install rclone
+        run: |
+          curl -Of https://downloads.rclone.org/rclone-current-linux-amd64.zip
+          unzip rclone-current-linux-amd64.zip
+          RCLONE_DIR=$(find . -maxdepth 1 -type d -name "rclone-v*-linux-amd64")
+          sudo mv "$RCLONE_DIR"/rclone /usr/bin/rclone
+          rclone version
+
+      - name: Pull CSV from Google Drive
+        run: |
+          rclone copy "$REMOTE" ./data --config rclone.conf --transfers=4 --checkers=8 --log-level=INFO
+          
+      - name: Check for CSV data files
+        run: |
+          if [ ! -d ./data ] || [ -z "$(ls -A ./data)" ]; then
+            echo "::error::Data directory is empty or not found. Cannot proceed with training."
+            exit 1
+          fi
+
+      - name: Run training script
+        id: training
+        run: |
+          # 运行训练脚本
+          # 使用 tee 命令同时将日志输出到控制台和文件
+          # set -o pipefail 确保如果 python 脚本失败，整个步骤也会标记为失败
+          set -o pipefail
+          python Smart/scripts/train_smart.py 2>&1 | tee training_log.txt
+
+      - name: Upload model artifact
+        if: success() 
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-artifact
+          path: models/Model.bin
+
+
+      
+      - name: Configure Git
+        if: success()
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Update Tag
+        if: success()
+        run: |
+          # 删除旧 tag 并推送新 tag
+          git push --delete origin "$LATEST_TAG" 2>/dev/null || true  
+          git tag -f "$LATEST_TAG"
+          git push origin "$LATEST_TAG"
+
+      - name: Create Release
+        if: success()
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.LATEST_TAG }}
+          name: Smart Model
+          files: models/Model.bin
+          body: |
+            ✨ Permanent Model Link Updated.
+            - Model Source Commit: ${{ github.sha }}
+            - Training Run ID: ${{ github.run_id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      
+      - name: Send Notification
+        if: always() 
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          JOB_STATUS: ${{ job.status }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          LATEST_TAG: ${{ env.LATEST_TAG }}
+          LOG_FILE: "training_log.txt"
+        run: |
+          python -c '
+          import os
+          import urllib.request
+          import urllib.parse
+          import sys
+          import shutil
+
+          token = os.environ.get("TG_BOT_TOKEN")
+          chat_id = os.environ.get("TG_CHAT_ID")
+          status = os.environ.get("JOB_STATUS")
+          run_id = os.environ.get("GITHUB_RUN_ID")
+          repo = os.environ.get("GITHUB_REPOSITORY")
+          server_url = os.environ.get("GITHUB_SERVER_URL")
+          tag = os.environ.get("LATEST_TAG")
+          log_file = os.environ.get("LOG_FILE")
+
+          # 检查 Token
+          if not token or not chat_id:
+              print("::warning::Telegram Token or Chat ID is missing. Skipping notification.")
+              sys.exit(0)
+
+          def send_msg(text):
+              url = f"https://api.telegram.org/bot{token}/sendMessage"
+              payload = {
+                  "chat_id": chat_id,
+                  "text": text,
+                  "parse_mode": "HTML",
+                  "disable_web_page_preview": "true"
+              }
+              data = urllib.parse.urlencode(payload).encode("utf-8")
+              req = urllib.request.Request(url, data=data)
+              try:
+                  with urllib.request.urlopen(req) as response:
+                      print(f"Message sent: {response.status}")
+              except Exception as e:
+                  print(f"Failed to send message: {e}")
+
+          # 1. 发送总结标题
+          if status == "success":
+              header = f"""<b>🎉 模型发布成功！</b>
+              🔗 GitHub Release 已更新。
+              ✅ Mihomo 客户端将使用 V3 格式新模型。
+              <a href="{server_url}/{repo}/releases/tag/{tag}">查看 Release</a>
+              """
+          else:
+              header = f"""<b>🚨 模型部署/训练失败！</b>
+              ❌ 任务运行过程中发生错误。
+              <a href="{server_url}/{repo}/actions/runs/{run_id}">查看详细运行记录</a>
+              """
+          
+          send_msg(header)
+
+          # 2. 直接读取本地文件并分段发送
+          if os.path.exists(log_file):
+              try:
+                  with open(log_file, "r", encoding="utf-8", errors="ignore") as f:
+                      content = f.read()
+                  
+                  if not content.strip():
+                      send_msg("<i>(日志文件为空)</i>")
+                  else:
+                      # 每次发送 3000 字符，避免超出 Telegram 限制
+                      chunk_size = 3000
+                      if len(content) > chunk_size:
+                          for i in range(0, len(content), chunk_size):
+                              chunk = content[i:i+chunk_size]
+                              send_msg(f"<pre>{chunk}</pre>")
+                      else:
+                          send_msg(f"<pre>{content}</pre>")
+              except Exception as e:
+                  send_msg(f"读取日志文件出错: {str(e)}")
+          else:
+              send_msg(f"⚠️ 找不到日志文件: {log_file} (可能在训练开始前就崩溃了)")
+          
+          # 3. 清理临时文件 (在通知发送后清理)
+          if os.path.exists("rclone.conf"):
+              os.remove("rclone.conf")
+          if os.path.exists("./data"):
+              shutil.rmtree("./data", ignore_errors=True)
+          '
