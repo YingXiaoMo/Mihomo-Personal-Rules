@@ -112,22 +112,16 @@ dns:
 
 
 # 指定域名查询的解析服务器，可使用 geosite, 优先于 nameserver/fallback 查询
-# 我不需要国外v6地址，所以数据库匹配丢弃v6了，有需要可以去掉#disable-ipv6=true，或者直接把这里注释掉使用上面的direct-nameserver
   nameserver-policy:
     # 国内域名 -> 正常双栈
     "geosite:cn,private,steam@cn":
       - https://223.5.5.5/dns-query
       - https://119.29.29.29/dns-query
       
-    # 非国内域名 -> Google DNS -> 强制丢弃 v6
-    # 这一行就是利用数据库匹配所有非国内网站
-    "geosite:geolocation-!cn":
-      - https://1.1.1.1/dns-query#disable-ipv6=true
-      - https://8.8.8.8/dns-query#disable-ipv6=true  
 
         
 # 在访问的国外网站没有匹配到任何域名规则，最终走了MATCH兜底规则时使用的DNS，为了确保不发生DNS泄漏和DNS污染，必须使用国外DNS
-# 说人话就是上面开启了遵循路由规则，DNS请求会匹配自己写的规则，没匹配到的会用这个DNS，所以写国外的防止DNS泄露
+# 说人话就是上面开启了遵循路由规则，DNS请求会匹配自己写的规则，没匹配到的会用这个DNS，上面写了cn数据库，没匹配到数据库的都会使用这个解析所以写国外的防止DNS泄露
 # 我不需要国外v6地址，所以强制丢弃v6了，有需要可以去掉#disable-ipv6=true
   nameserver:
       - https://1.1.1.1/dns-query#disable-ipv6=true
