@@ -30,8 +30,6 @@ DOMAIN-SUFFIX,xiaomo.eu
 
 # 乱七八糟
 DOMAIN-SUFFIX,ghcr.io
-DOMAIN-SUFFIX,docker.com
-DOMAIN-SUFFIX,docker.io
 DOMAIN-SUFFIX,zeabur.com
 DOMAIN-SUFFIX,bujidao.org
 
