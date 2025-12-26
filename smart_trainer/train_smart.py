@@ -17,7 +17,6 @@ from sklearn.preprocessing import RobustScaler, StandardScaler
 
 
 
-
 GO_SOURCE_URL = "https://raw.githubusercontent.com/vernesong/mihomo/Alpha/component/smart/lightgbm/transform.go"
 CACHE_DIR = Path("./cache")
 GO_SOURCE_CACHE_PATH = CACHE_DIR / "transform.go.cache"
