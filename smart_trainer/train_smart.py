@@ -260,7 +260,7 @@ def save_model_and_params(model, scalers, feature_order, output_path):
     print("\n[步骤7] 模型保存")
     print(f"开始保存模型至: {output_path}")
     
-    joblib.dump(model, output_path)
+    model.booster_.save_model(str(output_path))
     
     feature_name_to_idx = {v: k for k, v in feature_order.items()}
 
