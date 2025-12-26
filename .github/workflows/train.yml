@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'Smart/**'
+      - 'smart_trainer/**'
       - '.github/workflows/train.yml'
   schedule:
     - cron: '30 22 * * *'
@@ -37,7 +37,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r Smart/scripts/requirements.txt
+          pip install -r smart_trainer/requirements.txt
 
       - name: Set up rclone config
         run: |
@@ -66,17 +66,15 @@ jobs:
         id: training
         run: |
           # 运行训练脚本
-          # 使用 tee 命令同时将日志输出到控制台和文件
-          # set -o pipefail 确保如果 python 脚本失败，整个步骤也会标记为失败
           set -o pipefail
-          python Smart/scripts/train_smart.py 2>&1 | tee training_log.txt
+          python smart_trainer/train_smart.py --output-file Model.bin 2>&1 | tee training_log.txt
 
       - name: Upload model artifact
         if: success() 
         uses: actions/upload-artifact@v4
         with:
           name: model-artifact
-          path: models/Model.bin
+          path: Model.bin
 
 
       
@@ -100,7 +98,7 @@ jobs:
         with:
           tag_name: ${{ env.LATEST_TAG }}
           name: Smart Model
-          files: models/Model.bin
+          files: Model.bin
           body: |
             ✨ Permanent Model Link Updated.
             - Model Source Commit: ${{ github.sha }}
