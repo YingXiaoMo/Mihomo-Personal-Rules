@@ -346,6 +346,7 @@ def preprocess_data(df: pd.DataFrame, feature_order: dict) -> tuple:
         scaler_robust = RobustScaler()
         X[count_present] = scaler_robust.fit_transform(X[count_present])
         scalers['robust'] = scaler_robust
+        scalers['robust_features'] = count_present # Save feature names for ini generation
         logging.info(f"Applied RobustScaler to: {count_present}")
 
 
@@ -405,6 +406,29 @@ def save_model_and_params(model, scalers, feature_order, output_path: Path):
             definitions_string += "std_features=" + ",".join(feature_indices) + "\n"
             definitions_string += "std_mean=" + ",".join(f"{x:.6f}" for x in means) + "\n"
             definitions_string += "std_scale=" + ",".join(f"{x:.6f}" for x in scales) + "\n"
+
+    scaler_robust = scalers.get('robust')
+    robust_feature_names = scalers.get('robust_features', [])
+
+    if scaler_robust and robust_feature_names:
+        feature_indices = []
+        valid_indices = []
+
+        for i, name in enumerate(robust_feature_names):
+            if name in feature_name_to_idx:
+                feature_indices.append(str(feature_name_to_idx[name]))
+                valid_indices.append(i)
+            else:
+                logging.warning(f"Feature {name} not found in feature order map, skipping in transform config.")
+
+        if feature_indices:
+            centers = scaler_robust.center_[valid_indices]
+            scales = scaler_robust.scale_[valid_indices]
+
+            definitions_string += "\nrobust_type=RobustScaler\n"
+            definitions_string += "robust_features=" + ",".join(feature_indices) + "\n"
+            definitions_string += "robust_center=" + ",".join(f"{x:.6f}" for x in centers) + "\n"
+            definitions_string += "robust_scale=" + ",".join(f"{x:.6f}" for x in scales) + "\n"
 
     # Build [order] section
     for i in sorted(feature_order.keys()):
