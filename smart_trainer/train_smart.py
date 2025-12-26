@@ -289,7 +289,6 @@ def preprocess_data(df: pd.DataFrame, feature_order: dict) -> tuple:
 
     # Set target variables
     TARGET_MAIN = 'download_mbps'
-    TARGET_AUX = 'weight'
 
     if TARGET_MAIN not in df.columns:
         # Fallback for older data formats or dummy data
@@ -298,13 +297,7 @@ def preprocess_data(df: pd.DataFrame, feature_order: dict) -> tuple:
             raise ValueError("Main target variable ('download_mbps' or 'maxdownloadrate_kb') not found in data.")
         logging.warning(f"Main target 'download_mbps' not found, falling back to '{TARGET_MAIN}'.")
     
-    if TARGET_AUX not in df.columns:
-        raise ValueError(f"Auxiliary target variable '{TARGET_AUX}' not found in data.")
-
-    # Ensure auxiliary target is numeric, coercing errors to NaN and then filling with 0
-    df[TARGET_AUX] = pd.to_numeric(df[TARGET_AUX], errors='coerce').fillna(0)
-
-    y_combined = df[[TARGET_MAIN, TARGET_AUX]]
+    y = df[TARGET_MAIN]
 
     # Mask biased features
     logging.info(f"Masking biased features: {BIASED_FEATURES}")
@@ -444,12 +437,10 @@ def save_model_and_params(model, scalers, feature_order, output_path: Path):
     logging.info("Successfully appended scaling parameters to model file.")
 
 
-def evaluate_model(model, X_val: pd.DataFrame, y_val_combined: pd.DataFrame) -> float:
+def evaluate_model(model, X_val: pd.DataFrame, y_val: pd.Series) -> float:
     """Evaluates the model on the main target and returns its MAE."""
-    main_target_name = y_val_combined.columns[0]
-    y_val_main = y_val_combined[main_target_name]
     predictions = model.predict(X_val)
-    mae = mean_absolute_error(y_val_main, predictions)
+    mae = mean_absolute_error(y_val, predictions)
     return mae
 
 def main():
@@ -459,35 +450,7 @@ def main():
     parser.add_argument("--output-file", type=Path, default=Path("./Model.bin"), help="Path to save the model.")
     parser.add_argument("--days", type=int, default=15, help="Number of recent days of data to use.")
     parser.add_argument("--champion-model-path", type=Path, default=None, help="Path to the champion model for comparison.")
-    parser.add_argument("--alpha", type=float, default=0.2, help="Weight for the auxiliary objective (alignment with official weight).")
     args = parser.parse_args()
-
-    # --- Custom Objective and Metric for Multi-Target Learning ---
-    def hybrid_objective(y_true, y_pred):
-        """A hybrid loss function that combines two objectives."""
-        y_speed = y_true[:, 0]    # Main target: actual speed
-        y_weight = y_true[:, 1] # Auxiliary target: official weight decision
-        
-        # Gradient for the main loss (MAE on speed)
-        residual_speed = y_pred - y_speed
-        grad_speed = np.sign(residual_speed)
-
-        # Gradient for the auxiliary loss (MAE on aligning with official weight)
-        residual_weight = y_pred - y_weight
-        grad_weight = np.sign(residual_weight)
-
-        # Combine gradients with alpha weight
-        grad = (1 - args.alpha) * grad_speed + args.alpha * grad_weight
-        
-        # Hessian for L1 loss is a constant 1
-        hess = np.ones_like(y_pred)
-        return grad, hess
-
-    def main_mae_metric(y_true, y_pred):
-        """Evaluation metric that only considers the main target (speed)."""
-        y_speed = y_true[:, 0]
-        mae = np.mean(np.abs(y_speed - y_pred))
-        return 'main_mae', mae, False # Lower is better
 
     # --- Pipeline ---
     go_source = fetch_go_source()
@@ -498,21 +461,18 @@ def main():
         logging.error("No data loaded. Exiting.")
         sys.exit(1)
 
-    X, y_combined, sample_weights, scalers = preprocess_data(df, feature_order)
-
-    # Convert y to numpy for the custom objective
-    y_combined_np = y_combined.to_numpy()
+    X, y, sample_weights, scalers = preprocess_data(df, feature_order)
 
     X_train, X_val, y_train, y_val, weights_train, _ = train_test_split(
-        X, y_combined_np, sample_weights, test_size=0.2, random_state=42
+        X, y, sample_weights, test_size=0.2, random_state=42
     )
     X_train, X_test, y_train, y_test, weights_train, _ = train_test_split(
         X_train, y_train, weights_train, test_size=0.2, random_state=42
     )
 
-    logging.info("Training Challenger LightGBM model with hybrid objective...")
+    logging.info("Training Challenger LightGBM model (Regression L1)...")
     challenger_model = lgb.LGBMRegressor(
-        objective=hybrid_objective,
+        objective='regression_l1',
         n_estimators=1000,
         learning_rate=0.05,
         num_leaves=31,
@@ -523,14 +483,11 @@ def main():
         X_train, y_train,
         sample_weight=weights_train,
         eval_set=[(X_test, y_test)],
-        eval_metric=main_mae_metric,
         callbacks=[lgb.early_stopping(100, verbose=True)]
     )
     logging.info("Challenger model training complete.")
 
-    # For evaluation, we pass the original DataFrame to easily extract the main target
-    _, y_val_df, _, _ = train_test_split(X, y_combined, sample_weights, test_size=0.2, random_state=42)
-    challenger_mae = evaluate_model(challenger_model, X_val, y_val_df)
+    challenger_mae = evaluate_model(challenger_model, X_val, y_val)
     logging.info(f"Challenger model validation MAE on main target: {challenger_mae:.4f}")
 
     new_model_is_champion = True
@@ -538,8 +495,7 @@ def main():
         logging.info(f"Loading champion model from {args.champion_model_path} for comparison.")
         try:
             champion_model = joblib.load(args.champion_model_path)
-            # The champion model doesn't know the hybrid objective, but evaluate_model only cares about predictions.
-            champion_mae = evaluate_model(champion_model, X_val, y_val_df)
+            champion_mae = evaluate_model(champion_model, X_val, y_val)
             logging.info(f"Champion model validation MAE on main target: {champion_mae:.4f}")
 
             if challenger_mae >= champion_mae:
