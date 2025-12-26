@@ -234,19 +234,14 @@ proxy-groups:
 # - { name: 自建散列, <<: *CH, <<: *ZJ, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png" }
 
 # dns
-  - { name: DNS服务, type: url-test, <<: *Check, hidden: true, proxies: [ 新加坡自动, 香港自动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Area.png"}
+  - { name: DNS服务, type: url-test, <<: *Check, hidden: true, proxies: [ 香港自动,新加坡自动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Area.png"}
 
 
 
 # 规则匹配
 rules:
-  - DOMAIN-SUFFIX,cloudflare-dns.com, DNS服务
-  - DOMAIN-SUFFIX,dns.google, DNS服务
-  - IP-CIDR,1.1.1.1/32, DNS服务
-  - IP-CIDR,8.8.8.8/32, DNS服务
-
-  
-  - RULE-SET,私有域名 , 直连
+  - RULE-SET,DNS, DNS服务
+  - RULE-SET,私有域名, 直连
   - RULE-SET,直连软件, 直连
   - RULE-SET,网络测试, 网络测试
   - RULE-SET,广告, REJECT
@@ -290,7 +285,7 @@ rule-anchor:
   domain_text: &domain_text {type: http, interval: 86400, behavior: domain, format: text} 
   class: &class {type: http, interval: 86400, behavior: classical, format: text}
 rule-providers: 
-  fakeip过滤: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/fakeip-filter.mrs"}  
+  DNS: { <<: *class, url: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/rules/custom/proxydns.list"} 
   游戏下载: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games-cn.mrs"} 
   游戏平台: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games.mrs"} 
   私有域名: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/private.mrs"} 

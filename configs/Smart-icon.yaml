@@ -259,10 +259,7 @@ proxy-groups:
 
 # 规则匹配
 rules:
-  - DOMAIN-SUFFIX,cloudflare-dns.com, DNS服务
-  - DOMAIN-SUFFIX,dns.google, DNS服务
-  - IP-CIDR,1.1.1.1/32, DNS服务
-  - IP-CIDR,8.8.8.8/32, DNS服务
+  - RULE-SET,DNS, DNS服务
 
 
   - RULE-SET,私有域名 , 直连
@@ -308,6 +305,7 @@ rule-anchor:
   domain_text: &domain_text {type: http, interval: 86400, behavior: domain, format: text} 
   class: &class {type: http, interval: 86400, behavior: classical, format: text}
 rule-providers: 
+  DNS: { <<: *class, url: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/rules/custom/proxydns.list"} 
   fakeip过滤: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/fakeip-filter.mrs"}  
   游戏下载: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games-cn.mrs"} 
   游戏平台: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games.mrs"} 
