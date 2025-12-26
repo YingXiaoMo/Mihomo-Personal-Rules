@@ -13,3 +13,4 @@ transform.go
 
 # Ignore local files
 .vscode/
+*.csv
