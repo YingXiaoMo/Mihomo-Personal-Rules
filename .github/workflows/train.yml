@@ -80,18 +80,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "🧹 清理旧版本..."
           gh release delete "$LATEST_TAG" --cleanup-tag -y || true
-        
           git tag -d "$LATEST_TAG" 2>/dev/null || true
-          
           sleep 5
-          
-          echo "🚀 发布新版本..."
-
+          RELEASE_NOTES="✨ 模型自动训练完成。<br><br>📅 时间: $(date -u '+%Y-%m-%d %H:%M:%S UTC')<br>🔗 Commit: ${{ github.sha }}<br>🆔 Run ID: ${{ github.run_id }}"
           gh release create "$LATEST_TAG" Model.bin \
-            --title "Smart Model \
-            --notes "✨ 模型自动训练完成。<br><br>📅 时间: $(date -u '+%Y-%m-%d %H:%M:%S UTC')<br>🔗 Commit: ${{ github.sha }}<br>🆔 Run ID: ${{ github.run_id }}" \
+            --title "Smart Model (Auto-Update)" \
+            --notes "$RELEASE_NOTES" \
             --target main \
             --latest
 
@@ -156,7 +151,6 @@ jobs:
           
           send_msg(header)
 
-          # 发送日志内容
           if os.path.exists(log_file):
               try:
                   with open(log_file, "r", encoding="utf-8", errors="ignore") as f:
