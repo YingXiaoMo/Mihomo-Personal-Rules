@@ -66,7 +66,6 @@ jobs:
         id: training
         run: |
           set -o pipefail
-          # 训练并将日志同时输出到屏幕和文件
           python smart_trainer/train_smart.py --output-file Model.bin 2>&1 | tee training_log.txt
 
       - name: Upload model artifact
@@ -82,22 +81,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "🧹 清理旧版本..."
-          # 1. 强制删除旧的 Release 和 Tag (如果存在)
-          # --cleanup-tag: 同时删除关联的 tag
-          # -y: 确认删除
           gh release delete "$LATEST_TAG" --cleanup-tag -y || true
-          
-          # 2. 确保本地也没有残留 tag 避免冲突
+        
           git tag -d "$LATEST_TAG" 2>/dev/null || true
           
-          # 3. 稍微等一下 GitHub API 反应
           sleep 5
           
           echo "🚀 发布新版本..."
-          # 4. 创建新 Release 并直接上传 Model.bin
-          # --target main: 基于当前 main 分支自动打 tag
-          # --latest: 标记为最新版本
-          # 这里的 Model.bin 必须与上面训练生成的路径一致
+
           gh release create "$LATEST_TAG" Model.bin \
             --title "Smart Model \
             --notes "✨ 模型自动训练完成。<br><br>📅 时间: $(date -u '+%Y-%m-%d %H:%M:%S UTC')<br>🔗 Commit: ${{ github.sha }}<br>🆔 Run ID: ${{ github.run_id }}" \
@@ -174,7 +165,6 @@ jobs:
                   if not content.strip():
                       send_msg("<i>(日志文件为空)</i>")
                   else:
-                      # 分段发送，防止超出 TG 限制
                       chunk_size = 3000
                       if len(content) > chunk_size:
                           for i in range(0, len(content), chunk_size):
@@ -187,7 +177,6 @@ jobs:
           else:
               send_msg(f"⚠️ 找不到日志文件: {log_file} (可能在训练开始前就崩溃了)")
 
-          # 清理敏感文件
           if os.path.exists("rclone.conf"):
               os.remove("rclone.conf")
           if os.path.exists("./data"):
