@@ -99,7 +99,7 @@ jobs:
           # --latest: 标记为最新版本
           # 这里的 Model.bin 必须与上面训练生成的路径一致
           gh release create "$LATEST_TAG" Model.bin \
-            --title "Smart Model (Auto-Update)" \
+            --title "Smart Model \
             --notes "✨ 模型自动训练完成。<br><br>📅 时间: $(date -u '+%Y-%m-%d %H:%M:%S UTC')<br>🔗 Commit: ${{ github.sha }}<br>🆔 Run ID: ${{ github.run_id }}" \
             --target main \
             --latest
