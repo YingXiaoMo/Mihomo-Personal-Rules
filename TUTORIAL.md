@@ -33,7 +33,7 @@
 
 ## Rclone 安装与配置 (Github自动化前置要求)
 
-为了让 GitHub Actions 自动拉取云端数据，你需要配置 Rclone 并获取配置文件内容。
+为了让 GitHub Actions 自动拉取云端数据，你需要配置 Rclone 并获取配置文件内容。  
 如果只本地训练，下面的都不用管。
 
 1. **安装 Rclone**:
@@ -48,6 +48,7 @@
    - 输入 `n` 新建配置。
    - 输入名称 (例如 `gdrive`)。**请记住这个名称**，后续在 Secret `REMOTE` 中会用到 (格式如 `gdrive:/mihomo-data`)。
    - 根据提示选择存储服务商 (如 Google Drive, OneDrive 等) 并完成授权流程。
+   - 可以让AI写个脚本，每天把 Openwrt 上生成的 CSV  文件自动上传到你设置的网盘。
 
 3. **获取配置 Base64 编码**:
    配置完成后，需要将配置文件内容编码为 Base64 字符串，填入 GitHub Secret 的 `RCLONE_CONFIG_B64`。
