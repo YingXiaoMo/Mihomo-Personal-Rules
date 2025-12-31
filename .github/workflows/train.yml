@@ -53,12 +53,12 @@ jobs:
 
       - name: Pull CSV from Google Drive
         run: |
-          rclone copy "$REMOTE" ./data --config rclone.conf --transfers=4 --checkers=8 --log-level=INFO
+          rclone copy "$REMOTE" ./ --config rclone.conf --transfers=4 --checkers=8 --log-level=INFO
 
       - name: Check for CSV data files
         run: |
-          if [ ! -d ./data ] || [ -z "$(ls -A ./data)" ]; then
-            echo "::error::Data directory is empty or not found. Cannot proceed with training."
+          if ! ls *.csv &> /dev/null; then
+            echo "::error::No CSV data files found in the root directory. Cannot proceed with training."
             exit 1
           fi
 
@@ -66,7 +66,7 @@ jobs:
         id: training
         run: |
           set -o pipefail
-          python smart_trainer/train_smart.py --output-file Model.bin 2>&1 | tee training_log.txt
+          python smart_trainer/train_smart.py 2>&1 | tee training_log.txt
 
       - name: Upload model artifact
         if: success() 
@@ -108,6 +108,7 @@ jobs:
           import urllib.parse
           import sys
           import shutil
+          import glob
 
           token = os.environ.get("TG_BOT_TOKEN")
           chat_id = os.environ.get("TG_CHAT_ID")
@@ -173,6 +174,8 @@ jobs:
 
           if os.path.exists("rclone.conf"):
               os.remove("rclone.conf")
-          if os.path.exists("./data"):
-              shutil.rmtree("./data", ignore_errors=True)
+          
+          # Clean up CSV files
+          for csv_file in glob.glob("*.csv"):
+              os.remove(csv_file)
           '

@@ -18,8 +18,8 @@ from sklearn.preprocessing import RobustScaler, StandardScaler
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 
-DEFAULT_DATA_DIR = PROJECT_ROOT / "data"
-DEFAULT_MODEL_PATH = PROJECT_ROOT / "models" / "Model.bin"
+DEFAULT_DATA_DIR = PROJECT_ROOT
+DEFAULT_MODEL_PATH = PROJECT_ROOT / "Model.bin"
 CACHE_DIR = SCRIPT_DIR / "cache"
 GO_SOURCE_CACHE_PATH = CACHE_DIR / "transform.go.cache"
 
