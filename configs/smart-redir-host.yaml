@@ -28,6 +28,7 @@ proxy-providers:
 
 # 要添加多个机场就把上面的整个 Airport1 块复制粘贴，改个名字就行了
 
+
 # 全局配置
 port: 7890                                                         # HTTP(S) 代理端口
 socks-port: 7891                                                   # SOCKS5 代理端口 
@@ -86,7 +87,7 @@ dns:
   respect-rules: true                                               # 让连接DNS服务器时能够遵循规则，也就是通过代理节点连接到上面设置的国外DNS，因为直连可能连接不上  
   use-hosts: true                                                   # 是否回应配置中的 hosts，默认 true
   use-system-hosts: false                                           # 是否查询系统 hosts 文件，默认 false
-  enhanced-mode: redir-host                                         # 增强模式，支持 redir-host 和 fake-ip 两种模式                                                                                                                                                                       # 是否回应配置中的 hosts，默认 true               
+  enhanced-mode: redir-host                                         # 增强模式，支持 redir-host 和 fake-ip 两种模式
 
 
 # 基础DNS服务器，必须先有它才能使用域名类型的DNS配置，因此必须为IP，此处使用阿里云DNS
@@ -124,7 +125,7 @@ dns:
 
 
 # 节点选择锚点
-all: &all { type: select, proxies: [ 新加坡散列, 香港散列, 台湾散列, 日本散列, 美国散列, 其他散列, 自建散列, 新加坡手动, 香港手动, 台湾手动, 日本手动, 美国手动, 其他手动, 自建手动, 全部手动, 直连 ] } 
+all: &all { type: select, proxies: [ 新加坡智能, 香港智能, 台湾智能, 日本智能, 美国智能, 其他智能, 自建智能, 新加坡手动, 香港手动, 台湾手动, 日本手动, 美国手动, 其他手动, 自建手动, 全部手动, 直连 ] } 
 
 
 # 节点筛选锚点
@@ -151,7 +152,6 @@ RR: &RR { type: load-balance, strategy: round-robin, include-all: true, <<: *Che
 # Load-Balance (散列) 策略通用模板
 # 适用于需要保持客户端连接一致性（例如，防止频繁切换 IP 导致登录失效）的场景
 CH: &CH { type: load-balance, strategy: consistent-hashing, include-all: true, <<: *Check,hidden: true, exclude-type: direct }
-
 
 
 # 代理组配置
@@ -199,13 +199,13 @@ proxy-groups:
   - { name: DNS服务, type: url-test, <<: *Check, hidden: true, proxies: [ 新加坡自动, 香港自动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Area.png"}
 
 # 故障转移 
-# - { name: 新加坡故转, <<: *Fallback, proxies: [ 新加坡自动, 新加坡手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
-# - { name: 香港故转, <<: *Fallback, proxies: [ 香港自动, 香港手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
-# - { name: 台湾故转, <<: *Fallback, proxies: [ 台湾自动, 台湾手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png"}
-# - { name: 日本故转, <<: *Fallback, proxies: [ 日本自动, 日本手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
-# - { name: 美国故转, <<: *Fallback, proxies: [ 美国自动, 美国手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
-# - { name: 其他故转, <<: *Fallback, proxies: [ 其他自动, 其他手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
-# - { name: 自建故转, <<: *Fallback, proxies: [ 自建自动, 自建手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png"}
+# - { name: 新加坡故转, <<: *Fallback, proxies: [ 新加坡智能, 新加坡自动, 新加坡手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
+# - { name: 香港故转, <<: *Fallback, proxies: [ 香港智能, 香港自动, 香港手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
+# - { name: 台湾故转, <<: *Fallback, proxies: [ 台湾智能, 台湾自动, 台湾手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png"}
+# - { name: 日本故转, <<: *Fallback, proxies: [ 日本智能, 日本自动, 日本手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
+# - { name: 美国故转, <<: *Fallback, proxies: [ 美国智能, 美国自动, 美国手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
+# - { name: 其他故转, <<: *Fallback, proxies: [ 其他智能, 其他自动, 其他手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
+# - { name: 自建故转, <<: *Fallback, proxies: [ 自建智能, 自建自动, 自建手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png"}
 
 # 自动选择
   - { name: 新加坡自动, <<: *Url-Test, <<: *SG, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
@@ -215,6 +215,15 @@ proxy-groups:
 # - { name: 美国自动, <<: *Url-Test, <<: *US, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
 # - { name: 其他自动, <<: *Url-Test, <<: *Other, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
 # - { name: 自建自动, <<: *Url-Test, <<: *ZJ, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png"}
+
+# 智能选择
+  - { name: 新加坡智能, <<: *Smart, <<: *SG, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
+  - { name: 香港智能, <<: *Smart, <<: *HK, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
+  - { name: 台湾智能, <<: *Smart, <<: *TW, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png"}
+  - { name: 日本智能, <<: *Smart, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
+  - { name: 美国智能, <<: *Smart, <<: *US, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
+  - { name: 其他智能, <<: *Smart, <<: *Other, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
+  - { name: 自建智能, <<: *Smart, <<: *ZJ, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png" }
 
 # 轮询负载 
 # - { name: 新加坡轮询, <<: *RR, <<: *SG, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
@@ -226,13 +235,13 @@ proxy-groups:
 # - { name: 自建轮询, <<: *RR, <<: *ZJ, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png" }
 
 # 散列负载 
- - { name: 新加坡散列, <<: *CH, <<: *SG, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
- - { name: 香港散列, <<: *CH, <<: *HK, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
- - { name: 台湾散列, <<: *CH, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png"}
- - { name: 日本散列, <<: *CH, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
- - { name: 美国散列, <<: *CH, <<: *US, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
- - { name: 其他散列, <<: *CH, <<: *Other, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
- - { name: 自建散列, <<: *CH, <<: *ZJ, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png" }
+# - { name: 新加坡散列, <<: *CH, <<: *SG, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
+# - { name: 香港散列, <<: *CH, <<: *HK, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
+# - { name: 台湾散列, <<: *CH, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png"}
+# - { name: 日本散列, <<: *CH, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
+# - { name: 美国散列, <<: *CH, <<: *US, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
+# - { name: 其他散列, <<: *CH, <<: *Other, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
+# - { name: 自建散列, <<: *CH, <<: *ZJ, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png" }
 
 
 # 规则匹配

@@ -1,0 +1,48 @@
+proxy-providers:
+  provider1:                                                          # 不能重复，建议不要和策略组名称重复            
+    type: http                                                        # provider类型，可选http / file / inline      
+    url: "http://test.com"                                            # 机场订阅  
+    path: ./proxy_providers/provider1.yaml                            # 机场配置文件本地存放路径                 
+    interval: 3600                                                    # 机场订阅更新频率，单位为秒
+    proxy: DIRECT                                                     # 订阅更新时使用的代理名称，可选
+    size-limit: 0                                                     # 限制下载文件的最大大小，默认为 0 即不限制文件大小，单位为字节 (b)         
+    header:                                                           # 自定义请求头，可选
+      User-Agent:
+      - "Clash/v1.18.0"
+      - "mihomo/1.18.3"
+      Authorization:
+      - 'token 1231231'
+    health-check:                                                     # 可选，订阅内节点的健康检查配置
+      enable: true                                                    # 是否启用健康检查                       
+      url: https://www.gstatic.com/generate_204                       # 健康检查使用的URL地址                     
+      interval: 300                                                   # 健康检查间隔，单位为秒                      
+      timeout: 5000                                                   # 健康检查超时时间，单位为毫秒                  
+      lazy: true                                                      # 是否启用懒惰健康检查模式，默认为 false
+      expected-status: 204                                            # 预期的HTTP状态码，默认为 200
+    override:                                                         # 可选，订阅内节点的属性覆盖配置                         
+      tfo: false                                                      # 是否启用 TCP Fast Open，默认为 false                   
+      mptcp: false                                                    # 是否启用 MPTCP，默认为 false                      
+      udp: true                                                       # 是否启用 UDP 转发，默认为 true                   
+      udp-over-tcp: false                                             # 是否启用 UDP over TCP，默认为 false                    
+      down: "50 Mbps"                                                 # 限制下载速度，格式为 <number> <unit>，unit 可选 bps / Kbps / Mbps / Gbps
+      up: "10 Mbps"                                                   # 限制上传速度，格式为 <number> <unit>，unit 可选 bps / Kbps / Mbps / Gbps
+      skip-cert-verify: true                                          # 是否跳过节点的证书验证，默认为 false
+      dialer-proxy: proxy                                             # 使用指定的代理进行节点拨号，值为代理名称   
+      interface-name: tailscale0                                      # 指定节点拨号使用的网络接口名称                      
+      routing-mark: 233                                               # 指定节点拨号使用的路由标记值                     
+      ip-version: ipv4-prefer                                         # 指定节点拨号使用的 IP 版本，可选 ipv4 / ipv6 / ipv4-prefer / ipv6-prefer / auto                 
+      additional-prefix: "provider1 prefix |"                         # 为节点名称添加前缀字符串                  
+      additional-suffix: "| provider1 suffix"                         # 为节点名称添加后缀字符串                 
+      proxy-name:                                                     # 自定义节点名称规则列表，按顺序匹配
+      - pattern: "IPLC-(.*?)倍"                                       # 支持正则表达式                     
+        target: "iplc x $1"                                           # 支持使用捕获组            
+    filter: "(?i)港|hk|hongkong|hong kong"                            # 可选，订阅内节点的过滤规则，支持正则表达式                    
+    exclude-filter: "xxx"                                             # 可选，订阅内节点的排除过滤规则，支持正则表达式          
+    exclude-type: "ss|http"                                           # 可选，排除指定类型的节点，支持多种类型，用竖线 | 分隔            
+    payload:                                                          # 手动添加节点，仅 type 为 inline 时生效
+      - name: "ss1"                                                  
+        type: ss
+        server: server
+        port: 443
+        cipher: chacha20-ietf-poly1305
+        password: "password"

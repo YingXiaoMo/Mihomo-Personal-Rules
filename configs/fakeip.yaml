@@ -2,21 +2,31 @@
 
 # 仅自用，要用的可以根据自己需求修改一下。
 
-# 锚点部分
+
+
+
 # 连通性检查通用锚点
-Check: &Check { url: https://www.gstatic.com/generate_204, interval: 180, timeout: 5000, tolerance: 20, lazy: false } 
+Check: &Check { url: https://www.gstatic.com/generate_204, interval: 180, timeout: 5000 } 
 
-# 机场订阅（所有订阅统一写在同一个 proxy-providers 块中，有多个机场就复制一下，修改"机场订阅"和"Airport1"不要重名即可）
+# 机场订阅
 proxy-providers:
-  Airport1:
-    url: "机场订阅"
-    type: http
-    interval: 86400
-    health-check:
-      enable: true
-      <<: *Check
-    proxy: 直连
+  Airport1:                                                        # 添加多个机场不要重复命名
+    url: "机场订阅"                                                 # 机场订阅地址 
+    type: http                                                     # 订阅类型       
+    interval: 86400                                                # 订阅更新频率，单位为秒，86400秒即24小时                                 
+    health-check:                                                  # 启用节点连通性检查                  
+      enable: true                                                 # 是否启用连通性检查         
+      url: https://www.gstatic.com/generate_204                    # 用于检查节点连通性的网址
+      interval: 300                                                # 检查频率，单位为秒
+    proxy: 🎯 全球直连                                             # 订阅下载时使用的代理名称，若不需要可删除此行                           
+    override:
+      additional-prefix: ""                                        # 自定义节点名字前缀                  
+#      additional-suffix: "| provider1 suffix"                     # 自定义节点名字后缀                 
+      skip-cert-verify: true                                       # 是否跳过节点的证书验证，默认为 false
+      udp: true                                                    # 是否启用 UDP 转发，默认为 true                   
+#    filter: "(?i)新加坡|坡|狮城|SG|Singapore"                       # 订阅内节点的过滤规则，支持正则表达式  
 
+# 要添加多个机场就把上面的整个 Airport1 块复制粘贴，改个名字就行了
 
 # 全局配置
 port: 7890                                                         # HTTP(S) 代理端口
@@ -32,14 +42,14 @@ tcp-concurrent: true                                               # tcp并发
 log-level: info                                                    # 日志等级
 mode: rule                                                         # 运行模式
 find-process-mode: 'off'                                           # 进程匹配                #always，总是匹配             strict，自动匹配
-# interface-name: en0                         # 绑定网卡
+# interface-name: en0                                              # 绑定网卡
 global-client-fingerprint: chrome                                  # 浏览器伪装
 keep-alive-idle: 600                                               # 手机省电
 keep-alive-interval: 15                                            # 手机省电
 disable-keep-alive: false                                          # 关闭手机省电
 profile:
-  store-selected: true                                             
-  store-fake-ip: true                                              # 选择的节点和fake-ip缓存，false表示关闭
+  store-selected: true                                             # 选择的节点缓存，false表示关闭                         
+  store-fake-ip: false                                             # fake-ip 缓存，false表示关闭               
 
 # 控制面板
 #（所有插件都自带可以在设置里下载，所以不写了 ）
@@ -48,7 +58,7 @@ profile:
 sniffer:
   enable: true
   force-dns-mapping: true                                          # 对 redir-host 类型识别的流量进行强制嗅探
-  parse-pure-ip: true                                              # 对所有未获取到域名的流量进行强制嗅探
+  parse-pure-ip: false                                             # 对所有ip进行强制嗅探
   override-destination: true                                       # 是否使用嗅探结果作为实际访问
   sniff: {HTTP: {ports: [80, "8080-8880"], override-destination: true}, TLS: {ports: [443, 8443]}, QUIC: {ports: [443, 8443]}}
   force-domain: ["+.v2ex.com"]
@@ -66,22 +76,22 @@ tun:
   endpoint-independent-nat: true                                    # 启用独立于端点的 NAT
   udp-timeout: 300s                                                 # UDP NAT 过期时间，以秒为单位
 
+
 # DNS模块
 dns:
-  enable: true                                                           # 开启dns
-  listen: "0.0.0.0:1053"                                                 # dns端口
-  ipv6: true                                                             # ipv6
-  use-hosts: false                                                       # 是否回应配置中的 hosts，默认 true
-  use-system-hosts: false                                                # 是否查询系统 hosts
-  respect-rules: true                                                    #让连接DNS服务器时能够遵循规则，也就是通过代理节点连接到上面设置的国外DNS，因为直连可能连接不上
-  enhanced-mode: fake-ip                                                 # 模式选择
-  fake-ip-range: "198.18.0.1/16"                                         # fake-ip地址池
+  enable: true                                                      # 启用DNS模块 
+  listen: 0.0.0.0:7874                                              # 监听地址和端口
+  ipv6: true                                                        # 是否启用IPv6
+  respect-rules: true                                               # 让连接DNS服务器时能够遵循规则，也就是通过代理节点连接到上面设置的国外DNS，因为直连可能连接不上  
+  use-hosts: true                                                   # 是否回应配置中的 hosts，默认 true
+  use-system-hosts: false                                           # 是否查询系统 hosts 文件，默认 false
+  enhanced-mode: fake-ip                                            # 增强模式，支持 redir-host 和 fake-ip 两种模式
+  fake-ip-range: "198.18.0.1/16"                                    # fake-ip地址池
   fake-ip-range6: "fd00::/8"
-  fake-ip-filter-mode: blacklist                                         # 黑白名单
-  fake-ip-filter:
-#    - "+.*"
+  fake-ip-filter-mode: blacklist                                    # 黑白名单
+  fake-ip-filter:                                                   # 黑名单列表，在这里写的域名或者规则集和数据库都会被回退到 redir-host 模式解析，防止某些域名被fake-ip错误解析导致无法访问
+#    - "+.*"                                                        # 测试用，表示所有域名都走redir-host模式解析
     - "geosite:cn"
-    - "+.rockstargames.com"
     - "rule-set:fakeip过滤"    
     - "+.services.googleapis.cn"
     - "+.xn--ngstr-lra8j.com"
@@ -90,7 +100,7 @@ dns:
     - "+.ntp.tencent.com"
     - "+.ntp1.aliyun.com"
     - "+.ntp.ntsc.ac.cn"
-    - "+.cn.ntp.org.cn"
+    - "+.cn.ntp.org.cn"                                                                                                                                                                  # 是否回应配置中的 hosts，默认 true               
 
 
 # 基础DNS服务器，必须先有它才能使用域名类型的DNS配置，因此必须为IP，此处使用阿里云DNS
@@ -100,12 +110,12 @@ dns:
 #    - tls://223.6.6.6
 
 # 规则匹配到直连时使用的DNS，既然是可以直连的，当然要用国内DNS解析速度更快更稳定
-# 我使用下面的数据库匹配所以把这里注释掉了
+# 我使用下面的数据库匹配所以把这里注释掉了，需要的可以打开这个，把下面的nameserver-policy注释掉
 #  direct-nameserver:    
 #   - https://223.5.5.5/dns-query
 #   - https://223.6.6.6/dns-query
 
-# 解析代理节点时使用的DNS，为了使下面的respect-rules生效必须设置，最好设置为国内DNS，否则在代理的第一步就可能因为连接不上国外DNS而解析不出代理节点的IP，最终倒在起点
+# 解析代理节点时使用的DNS，最好设置为国内DNS，否则在代理的第一步就可能因为连接不上国外DNS而解析不出代理节点的IP，最终倒在起点
   proxy-server-nameserver:
     - https://223.5.5.5/dns-query
     - https://223.6.6.6/dns-query
@@ -117,21 +127,18 @@ dns:
     "geosite:cn,private,steam@cn":
       - https://223.5.5.5/dns-query
       - https://119.29.29.29/dns-query
-      
 
-        
+
 # 在访问的国外网站没有匹配到任何域名规则，最终走了MATCH兜底规则时使用的DNS，为了确保不发生DNS泄漏和DNS污染，必须使用国外DNS
-# 说人话就是上面开启了遵循路由规则，DNS请求会匹配自己写的规则，没匹配到的会用这个DNS，上面写了cn数据库，没匹配到数据库的都会使用这个解析所以写国外的防止DNS泄露
+# 说人话就是上面开启了遵循路由规则，DNS请求会匹配自己写的规则，没匹配到的会用这个DNS，上面写了cn数据库，没匹配到数据库的都会使用这个解析，所以写国外的防止DNS泄露
 # 我不需要国外v6地址，所以强制丢弃v6了，有需要可以去掉#disable-ipv6=true
   nameserver:
-      - https://1.1.1.1/dns-query#disable-ipv6=true
-      - https://8.8.8.8/dns-query#disable-ipv6=true  
-    
-
+      - https://1.1.1.1/dns-query#disable-ipv6=true         # 国外域名 -> 仅ipv4 
+      - https://8.8.8.8/dns-query#disable-ipv6=true         # 国外域名 -> 仅ipv4 
 
 
 # 节点选择锚点
-all: &all {  type: select, proxies: [ 新加坡智能, 香港智能, 日本智能, 美国智能, 其他智能, 自建智能, 新加坡手动, 香港手动, 日本手动, 美国手动, 其他手动, 自建手动, 全部手动, 直连 ] } 
+all: &all { type: select, proxies: [ 新加坡散列, 香港散列, 台湾散列, 日本散列, 美国散列, 其他散列, 自建散列, 新加坡手动, 香港手动, 台湾手动, 日本手动, 美国手动, 其他手动, 自建手动, 全部手动, 直连 ] } 
 
 
 # 节点筛选锚点
@@ -139,25 +146,28 @@ SG: &SG { filter: "(?i)新加坡|坡|狮城|SG|Singapore" }
 HK: &HK { filter: "(?i)港|hk|hongkong|hong kong" } 
 US: &US { filter: "(?i)(us|united states|美国|美区)" }
 JP: &JP { filter: "(?i)日本|jp|japan" } 
-ZJ: &ZJ { filter: "(?i)(自建|workers)(?!.*移动)" } 
+TW: &TW { filter: "(?i)台|台湾|tw|taiwan" } 
+ZJ: &ZJ { filter: "(?i)(自建|workers)(?!.*移动)" }                # 这里只会匹配自建和workers，不会匹配移动自建，既然是自建节点，改个名字就行了
 Other: &Other { filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨🇳|港|hk|hongkong|台|tw|taiwan|日|直连|jp|japan|新|sg|singapore|美|us|unitedstates)).*" } 
 
 # 节点分组锚点
 # Select 策略通用模板 (用于手动选择)
 Select: &Select { type: select, include-all: true, exclude-type: direct  } 
 # Smart 策略通用模板 (用于智能选择)
-Smart: &Smart { type: smart, include-all: true, uselightgbm: true, collectdata: true, strategy: sticky-sessions, <<: *Check, exclude-type: direct }  
+Smart: &Smart { type: smart, include-all: true, uselightgbm: true, collectdata: true, strategy: sticky-sessions, hidden: true, <<: *Check, exclude-type: direct }  
 # Url-Test 策略通用模板 (用于自动选择)
-Url-Test: &Url-Test { type: url-test, include-all: true, <<: *Check, exclude-type: direct }
+Url-Test: &Url-Test { type: url-test, include-all: true, <<: *Check, hidden: true, exclude-type: direct }
 # Fallback 策略通用模板 (用于故障转移)
-Fallback: &Fallback { type: fallback, <<: *Check, lazy: false }
+Fallback: &Fallback { type: fallback, <<: *Check, hidden: true, lazy: false }
 # Round-Robin 策略通用模板 (用于轮询负载均衡)
 # 轮询会循环使用列表中的节点，适用于需要平均分配负载的场景
-RR: &RR { type: load-balance, strategy: round-robin, include-all: true, <<: *Check, exclude-type: direct }
+RR: &RR { type: load-balance, strategy: round-robin, include-all: true, <<: *Check,hidden: true, exclude-type: direct }
 # Load-Balance (散列) 策略通用模板
 # 适用于需要保持客户端连接一致性（例如，防止频繁切换 IP 导致登录失效）的场景
-CH: &CH { type: load-balance, strategy: consistent-hashing, include-all: true, <<: *Check, exclude-type: direct }
+CH: &CH { type: load-balance, strategy: consistent-hashing, include-all: true, <<: *Check,hidden: true, exclude-type: direct }
 
+
+# 代理组配置
 proxy-groups:
   - { name: 漏网之鱼, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/match.png" }
   - { name: 游戏平台, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Steam.png" }
@@ -176,7 +186,6 @@ proxy-groups:
   - { name: 微软服务, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Microsoft.png" }
   - { name: 网络测试, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Speedtest.png" }
   - { name: Twitter, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Twitter.png" }
-  - { name: Bybit, <<: *Bybit, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Bybit.png" }
   - { name: TikTok, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Tiktok.png" }
   - { name: 代理域名, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Global.png" }
   - { name: 直连, type: select, proxies: [DIRECT], hidden: true, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Direct.png" }
@@ -193,82 +202,64 @@ proxy-groups:
 # 手动选择
   - { name: 新加坡手动, <<: *Select, <<: *Check, <<: *SG, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png" }
   - { name: 香港手动, <<: *Select, <<: *Check, <<: *HK, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png" }
+  - { name: 台湾手动, <<: *Select, <<: *Check, <<: *TW, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png" }
   - { name: 日本手动, <<: *Select, <<: *Check, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png" }
   - { name: 美国手动, <<: *Select, <<: *Check, <<: *US, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png" }
-  - { name: Emby手动, <<: *Select, <<: *Check, <<: *E, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Emby.png"}
   - { name: 其他手动, <<: *Select, <<: *Check, <<: *Other, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
   - { name: 自建手动, <<: *Select, <<: *Check,<<: *ZJ, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png"}
 
+# dns
+  - { name: DNS服务, type: url-test, <<: *Check, hidden: true, proxies: [ 新加坡自动, 香港自动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Area.png"}
 
-# 故障转移 (注释部分已修正缩进)
-# - { name: 新加坡故转, <<: *Fallback, proxies: [ 新加坡智能, 新加坡自动, 新加坡手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
-# - { name: 香港故转, <<: *Fallback, proxies: [ 香港智能, 香港自动, 香港手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
-# - { name: 日本故转, <<: *Fallback, proxies: [ 日本智能, 日本自动, 日本手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
-# - { name: 美国故转, <<: *Fallback, proxies: [ 美国智能, 美国自动, 美国手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
-# - { name: Emby故转, <<: *Fallback, proxies: [ Emby智能, Emby自动, Emby手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Emby.png"}
-# - { name: 其他故转, <<: *Fallback, proxies: [ 其他智能, 其他自动, 其他手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
-# - { name: 自建故转, <<: *Fallback, proxies: [ 自建智能, 自建自动, 自建手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png"}
+# 故障转移 
+# - { name: 新加坡故转, <<: *Fallback, proxies: [ 新加坡自动, 新加坡手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
+# - { name: 香港故转, <<: *Fallback, proxies: [ 香港自动, 香港手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
+# - { name: 台湾故转, <<: *Fallback, proxies: [ 台湾自动, 台湾手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png"}
+# - { name: 日本故转, <<: *Fallback, proxies: [ 日本自动, 日本手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
+# - { name: 美国故转, <<: *Fallback, proxies: [ 美国自动, 美国手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
+# - { name: 其他故转, <<: *Fallback, proxies: [ 其他自动, 其他手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
+# - { name: 自建故转, <<: *Fallback, proxies: [ 自建自动, 自建手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png"}
 
 # 自动选择
   - { name: 新加坡自动, <<: *Url-Test, <<: *SG, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
   - { name: 香港自动, <<: *Url-Test, <<: *HK, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
+# - { name: 台湾自动, <<: *Url-Test, <<: *TW, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png"}
 # - { name: 日本自动, <<: *Url-Test, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
 # - { name: 美国自动, <<: *Url-Test, <<: *US, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
-# - { name: Emby自动, <<: *Url-Test, <<: *E, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Emby.png"}
 # - { name: 其他自动, <<: *Url-Test, <<: *Other, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
 # - { name: 自建自动, <<: *Url-Test, <<: *ZJ, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png"}
-
-
-# 智能选择
-# smart参数         uselightgbm: true, 是否使用模型
-#                  collectdata: false,是否训练模型 
-#                  strategy: sticky-sessions,策略轮询散列都行，默认是散列
-
-# 分组内代理选择策略，可选 'sticky-sessions' 或 'round-robin'，不支持 'consistent-hashing'
-
-# 默认是 'sticky-sessions'，散列 ，在收集数据时具有更稳定、平滑的节点切换逻辑
-
-# policy-priority: "Premium:0.9;SG:1.3" 节点权重
-  - { name: 新加坡智能, <<: *Smart, <<: *SG, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
-  - { name: 香港智能, <<: *Smart, <<: *HK, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
-  - { name: 日本智能, <<: *Smart, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
-  - { name: 美国智能, <<: *Smart, <<: *US, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
-  - { name: Emby智能, <<: *Smart, <<: *E, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Emby.png"}
-  - { name: 其他智能, <<: *Smart, <<: *Other, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
-  - { name: 自建智能, <<: *Smart, <<: *ZJ, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png" }
 
 # 轮询负载 
 # - { name: 新加坡轮询, <<: *RR, <<: *SG, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
 # - { name: 香港轮询, <<: *RR, <<: *HK, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
+# - { name: 台湾轮询, <<: *RR, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png"}
 # - { name: 日本轮询, <<: *RR, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
 # - { name: 美国轮询, <<: *RR, <<: *US, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
 # - { name: 其他轮询, <<: *RR, <<: *Other, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
 # - { name: 自建轮询, <<: *RR, <<: *ZJ, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png" }
 
 # 散列负载 
-# - { name: 新加坡散列, <<: *CH, <<: *SG, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
-# - { name: 香港散列, <<: *CH, <<: *HK, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
-# - { name: 日本散列, <<: *CH, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
-# - { name: 美国散列, <<: *CH, <<: *US, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
-# - { name: 其他散列, <<: *CH, <<: *Other, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
-# - { name: 自建散列, <<: *CH, <<: *ZJ, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png" }
-
-# dns
-  - { name: DNS服务, type: url-test, <<: *Check, hidden: true, proxies: [ 新加坡自动, 香港自动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Area.png"}
+ - { name: 新加坡散列, <<: *CH, <<: *SG, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
+ - { name: 香港散列, <<: *CH, <<: *HK, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
+ - { name: 台湾散列, <<: *CH, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png"}
+ - { name: 日本散列, <<: *CH, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
+ - { name: 美国散列, <<: *CH, <<: *US, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
+ - { name: 其他散列, <<: *CH, <<: *Other, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
+ - { name: 自建散列, <<: *CH, <<: *ZJ, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png" }
 
 
 # 规则匹配
 rules:
   - RULE-SET,DNS, DNS服务
 
-
-  - RULE-SET,私有域名 , 直连
+  - RULE-SET,私有域名, 直连
   - RULE-SET,直连软件, 直连
   - RULE-SET,网络测试, 网络测试
+  - RULE-SET,广告, REJECT
   - RULE-SET,游戏下载, 直连
   - RULE-SET,游戏平台, 游戏平台
   - RULE-SET,BT下载, 直连
-  - RULE-SET,谷歌FCM, 新加坡智能
+  - RULE-SET,谷歌FCM, 香港智能
   - RULE-SET,谷歌cn, 直连
   - RULE-SET,微软云盘, 微软云盘
   - RULE-SET,微软服务, 微软服务
@@ -285,7 +276,6 @@ rules:
   - RULE-SET,油管视频, 油管视频
   - RULE-SET,谷歌域名, 谷歌服务
   - RULE-SET,Twitter, Twitter
-  - RULE-SET,Bybit, Bybit
   - RULE-SET,TikTok, TikTok
   - RULE-SET,代理顶级域名, 代理域名
   - RULE-SET,代理域名, 代理域名
@@ -298,14 +288,17 @@ rules:
 
   - MATCH, 漏网之鱼
 
+
 # 规则集
 rule-anchor:
   ip: &ip {type: http, interval: 86400, behavior: ipcidr, format: mrs}
   domain: &domain {type: http, interval: 86400, behavior: domain, format: mrs}
   domain_text: &domain_text {type: http, interval: 86400, behavior: domain, format: text} 
   class: &class {type: http, interval: 86400, behavior: classical, format: text}
+
 rule-providers: 
-  DNS: { <<: *class, url: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/rules/custom/proxydns.list"} 
+  DNS: { <<: *class, url: "https://raw.githubusercontent.com/yingxiaomo/Mihomo-Personal-Rules/refs/heads/main/rules/custom/proxydns.list"} 
+
   fakeip过滤: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/fakeip-filter.mrs"}  
   游戏下载: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games-cn.mrs"} 
   游戏平台: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games.mrs"} 
@@ -330,7 +323,6 @@ rule-providers:
   谷歌域名: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs"} 
   Twitter: { <<: *domain, url: "https://gh-proxy.com/github.com/metacubex/meta-rules-dat/raw/refs/heads/meta/geo/geosite/x.mrs"} 
   电报域名: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs"} 
-  Bybit: { <<: *domain, url: "https://gh-proxy.com/github.com/metacubex/meta-rules-dat/raw/refs/heads/meta/geo/geosite/bybit.mrs"} 
   TikTok: { <<: *domain, url: "https://gh-proxy.com/github.com/metacubex/meta-rules-dat/raw/refs/heads/meta/geo/geosite/tiktok.mrs"} 
   代理顶级域名: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/tld-proxy.mrs"} 
   代理域名: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/proxy.mrs"} 
@@ -339,3 +331,5 @@ rule-providers:
   国内ip: { <<: *ip, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/cnip.mrs"} 
   谷歌ip: { <<: *ip, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/google.mrs"} 
   电报ip: { <<: *ip, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/telegramip.mrs"} 
+  
+  广告: { <<: *domain_text, url: "https://raw.githubusercontent.com/yingxiaomo/Mihomo-Personal-Rules/refs/heads/main/rules/custom/uaaad.list"} 
