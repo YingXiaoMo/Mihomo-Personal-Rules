@@ -15,7 +15,7 @@ from sklearn.metrics import mean_absolute_error, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import RobustScaler, StandardScaler
 
-# ================= 配置区域 =================
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 
@@ -25,22 +25,19 @@ CACHE_DIR = SCRIPT_DIR / "cache"
 GO_SOURCE_CACHE_PATH = CACHE_DIR / "transform.go.cache"
 GO_SOURCE_URL = "https://raw.githubusercontent.com/vernesong/mihomo/Alpha/component/smart/lightgbm/transform.go"
 
-# 【最终修正】特征屏蔽列表
-# 这里的逻辑是：屏蔽所有"答案"和"资历"，只留"物理体质"。
+
 BIASED_FEATURES = [
-    # 1. 屏蔽累计流量类 (防止马太效应)
+
     'download_mb', 'upload_mb', 
     'traffic_density', 'traffic_ratio', 
     'history_download_mb', 'history_upload_mb',
     
-    # 2. 屏蔽时间类 (只看当前状态)
+
     'last_used_seconds', 'duration_minutes', 
     
-    # 3. 屏蔽历史极速 (防止歧视新节点)
+
     'history_maxuploadrate_kb', 'history_maxdownloadrate_kb',
     
-    # 4. 【关键修正】屏蔽本次测速结果 (防止数据泄露/作弊)
-    # 如果不屏蔽这两个，模型会直接"抄答案"，导致实战失效。
     'maxuploadrate_kb', 'maxdownloadrate_kb' 
 ]
 
@@ -64,7 +61,6 @@ COUNT_FEATURES = ['success', 'failure']
 
 LGBM_PARAMS = {
     'objective': 'regression',
-    # 使用 RMSE 严惩大误差，减少断连误判
     'metric': 'rmse',
     'boosting_type': 'gbdt',
     'n_estimators': 1000,
@@ -90,20 +86,17 @@ def print_separator(title=None):
 def fetch_go_source():
     print("\n[步骤1] Go 源码解析")
     
-    # 优先检测本地文件
     local_go_path = PROJECT_ROOT / "transform.go"
     if local_go_path.exists():
         print(f"发现本地 transform.go 文件: {local_go_path}")
         return local_go_path.read_text(encoding='utf-8')
     
-    # 其次检测缓存
     content = ""
     if GO_SOURCE_CACHE_PATH.exists():
         if (time.time() - GO_SOURCE_CACHE_PATH.stat().st_mtime) < 86400:
             print(f"成功加载本地缓存: {GO_SOURCE_CACHE_PATH}")
             return GO_SOURCE_CACHE_PATH.read_text(encoding='utf-8')
 
-    # 最后下载在线文件
     print(f"正在下载 Go 源文件: {GO_SOURCE_URL}")
     try:
         CACHE_DIR.mkdir(exist_ok=True)
@@ -147,7 +140,7 @@ def get_fallback_features():
     ]
     return {i: f for i, f in enumerate(features)}
 
-def load_data(data_dir, days=15):
+def load_data(data_dir, days=90):
     print("\n[步骤2] 数据加载与清洗")
     print(f"开始从数据目录加载所有 CSV 文件: {data_dir}")
     
@@ -158,8 +151,21 @@ def load_data(data_dir, days=15):
     all_files = glob.glob(str(data_dir / "*.csv"))
     
     cutoff_time = time.time() - (days * 86400)
-    recent_files = [f for f in all_files if os.path.getmtime(f) > cutoff_time]
     
+    recent_files = []
+    for f in all_files:
+        fname = os.path.basename(f)
+        date_match = re.search(r'smart_(\d{8}_\d{4})', fname)
+        if date_match:
+             try:
+                 file_time = time.mktime(time.strptime(date_match.group(1), "%Y%m%d_%H%M"))
+                 if file_time > cutoff_time:
+                     recent_files.append(f)
+             except:
+                 recent_files.append(f)
+        elif os.path.getmtime(f) > cutoff_time:
+             recent_files.append(f)
+
     if not recent_files:
         print("警告: 未发现近期数据，尝试加载所有文件...")
         recent_files = all_files
@@ -167,7 +173,7 @@ def load_data(data_dir, days=15):
     if not recent_files:
         raise FileNotFoundError("没有找到 CSV 文件")
 
-    print(f"--- 找到 {len(recent_files)} 个数据文件 ---")
+    print(f"--- 找到 {len(recent_files)} 个数据文件 (目标窗口: {days} 天) ---")
     
     dfs = []
     for f in recent_files:
@@ -182,7 +188,20 @@ def load_data(data_dir, days=15):
                 print(f"跳过无法读取的文件: {fname}")
                 continue
         
-        age_days = (time.time() - os.path.getmtime(f)) / 86400
+        age_days = 0.0
+        try:
+            date_match = re.search(r'smart_(\d{8}_\d{4})', fname)
+            if date_match:
+                time_str = date_match.group(1)
+                file_time = time.mktime(time.strptime(time_str, "%Y%m%d_%H%M"))
+                age_days = (time.time() - file_time) / 86400
+            else:
+                age_days = (time.time() - os.path.getmtime(f)) / 86400
+        except Exception:
+             age_days = (time.time() - os.path.getmtime(f)) / 86400
+        
+        if age_days < 0: age_days = 0
+        
         df['__file_age_days'] = age_days
         dfs.append(df)
     
@@ -207,14 +226,12 @@ def preprocess_data(df, feature_order):
     if not TARGET_MAIN:
         raise ValueError("严重错误: 未找到目标列 (maxdownloadrate_kb)")
 
-    # 【重要】保留断连数据
-    # 将 NaN 填充为 0，标记为断连，让模型学习"失败"的样子
     df[TARGET_MAIN] = df[TARGET_MAIN].fillna(0)
     
     original_rows = len(df)
     use_weight_as_fallback = False
     
-    # 全量数据训练，不再过滤 > 0.1
+
     if len(df) > 100:
         y = df[TARGET_MAIN]
         print(f"数据清洗: {original_rows} -> {len(df)} 条记录 (全量训练，包含断连样本)")
@@ -229,7 +246,6 @@ def preprocess_data(df, feature_order):
     if 'latency' in df.columns:
         df['latency_stability'] = df['latency'] / (df['latency'] + 1e-6)
     
-    # 执行特征屏蔽 (归零)
     mask_features = BIASED_FEATURES + COMPLEX_FEATURES
     for col in mask_features:
         if col in df.columns:
@@ -263,11 +279,9 @@ def preprocess_data(df, feature_order):
             scalers['rob_features'] = count_present
 
     if '__file_age_days' in df.columns:
-        # 加大时间衰减 (0.5)，优先使用近 3 天数据
         base_weight = 1.0 / (1.0 + 0.5 * df['__file_age_days'])
         
         if not use_weight_as_fallback:
-            # 稍微加大高速样本的权重
             speed_bonus = np.log1p(df[TARGET_MAIN]) * 0.1
             df['sample_weight'] = base_weight + speed_bonus
         else:
@@ -359,7 +373,7 @@ def training_logger_cn(period=100):
     return _callback
 
 def main():
-    print_separator("Mihomo 智能权重模型训练 (v2.1 修复泄露版)")
+    print_separator("Mihomo 智能权重模型训练 (v2.2 长期进化版)")
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", type=Path, default=DEFAULT_DATA_DIR)
@@ -374,7 +388,7 @@ def main():
         sys.exit(1)
 
     try:
-        df = load_data(args.data_dir, days=15)
+        df = load_data(args.data_dir, days=90)
     except Exception as e:
         print(f"错误: 加载数据失败: {e}")
         sys.exit(1)
