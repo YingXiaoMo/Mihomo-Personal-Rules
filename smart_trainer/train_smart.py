@@ -14,9 +14,6 @@ from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import RobustScaler, StandardScaler
 
-# ==============================================================================
-# 配置区域
-# ==============================================================================
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
@@ -27,17 +24,6 @@ CACHE_DIR = SCRIPT_DIR / "cache"
 GO_SOURCE_CACHE_PATH = CACHE_DIR / "transform.go.cache"
 GO_SOURCE_URL = "https://raw.githubusercontent.com/vernesong/mihomo/Alpha/component/smart/lightgbm/transform.go"
 
-# ------------------------------------------------------------------------------
-# 特征黑名单 (Masking) - 针对 "下载最快 + 不丢包" 的深度定制
-# ------------------------------------------------------------------------------
-# 策略说明：
-# 1. 既然要选下载最快的，必须【保留】所有 Download 相关的特征 (download_mb, maxdownloadrate 等)
-# 2. 我们不关心上传，所以屏蔽 Upload 相关特征，减少噪声。
-# 3. 屏蔽 ASN/Country 等静态特征，防止模型对特定地区产生偏见 (例如认为"日本节点一定快")，
-#    我们需要它根据实时的性能指标 (Latency, Success, History Rate) 来判断。
-# ------------------------------------------------------------------------------
-
-# 需要被强制置为 0 的特征
 IGNORED_FEATURES = [
     'upload_mb', 
     'history_upload_mb',
@@ -67,12 +53,11 @@ CONTINUOUS_FEATURES = [
 COUNT_FEATURES = ['success', 'failure']
 
 
-# LightGBM 暴力参数 - 追求过拟合高分节点
 LGBM_PARAMS = {
     'objective': 'regression',
     'metric': 'rmse',
     'boosting_type': 'gbdt',
-    'n_estimators': 5000,       # 调整为 5000 轮，兼顾精度与速度
+    'n_estimators': 10000,       
     'learning_rate': 0.03,
     'num_leaves': 63,
     'max_depth': -1,
