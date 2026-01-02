@@ -167,6 +167,9 @@ RR: &RR { type: load-balance, strategy: round-robin, include-all: true, <<: *Che
 CH: &CH { type: load-balance, strategy: consistent-hashing, include-all: true, <<: *Check,hidden: true, exclude-type: direct }
 
 
+- { name: 哔哩哔哩, type: select, proxies: [直连, 香港智能, 台湾智能, 香港手动, 台湾手动], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/bilibili.png" }
+
+
 # 代理组配置
 proxy-groups:
   - { name: 漏网之鱼, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/match.png" }
@@ -182,6 +185,7 @@ proxy-groups:
   - { name: Copilot, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Copilot.png" }
   - { name: 油管视频, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/YouTube.png" }
   - { name: 谷歌服务, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Google.png" }
+  - { name: 哔哩哔哩, type: select, proxies: [直连, 香港智能, 台湾智能, 香港手动, 台湾手动], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/bilibili.png" }
   - { name: 微软云盘, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/OneDrive.png" }
   - { name: 微软服务, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Microsoft.png" }
   - { name: 网络测试, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Speedtest.png" }
@@ -256,9 +260,10 @@ rules:
   - RULE-SET,直连软件, 直连
   - RULE-SET,网络测试, 网络测试
   - RULE-SET,广告, REJECT
+  - RULE-SET,哔哩哔哩, 哔哩哔哩
   - RULE-SET,游戏下载, 直连
   - RULE-SET,游戏平台, 游戏平台
-  - RULE-SET,BT下载, 直连
+  - RULE-SET,trackerslist, 直连
   - RULE-SET,谷歌FCM, 香港智能
   - RULE-SET,谷歌cn, 直连
   - RULE-SET,微软云盘, 微软云盘
@@ -280,9 +285,11 @@ rules:
   - RULE-SET,代理顶级域名, 代理域名
   - RULE-SET,代理域名, 代理域名
   - RULE-SET,直连域名, 直连
+  - RULE-SET,游戏平台ip, 游戏平台
   - RULE-SET,私有ip, 直连,no-resolve
   - RULE-SET,电报ip, 电报消息,no-resolve
   - RULE-SET,谷歌ip, 谷歌服务,no-resolve
+
   - RULE-SET,国内ip, 直连
   - GEOIP,CN, 直连
 
@@ -299,18 +306,19 @@ rule-anchor:
 rule-providers: 
   DNS: { <<: *class, url: "https://raw.githubusercontent.com/yingxiaomo/Mihomo-Personal-Rules/refs/heads/main/rules/custom/proxydns.list"} 
 
-  fakeip过滤: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/fakeip-filter.mrs"}  
+  fakeip过滤: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/fakeip-filter-lite.mrs"}  
   游戏下载: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games-cn.mrs"} 
   游戏平台: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games.mrs"} 
   私有域名: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/private.mrs"} 
-  BT下载: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/trackerslist.mrs"} 
+  trackerslist: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/trackerslist.mrs"} 
   直连软件: { <<: *class, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/applications.list"} 
+  哔哩哔哩: { <<: *class, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/bilibili.mrs"} 
   微软云盘: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/onedrive.mrs"} 
   微软服务: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/microsoft-cn.mrs"} 
   苹果服务: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/apple-cn.mrs"} 
   谷歌cn: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/google-cn.mrs"} 
   谷歌FCM: { <<: *class, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GoogleFCM/GoogleFCM.list"} 
-  网络测试: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/ookla-speedtest.mrs"} 
+  网络测试: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/networktest.mrs"} 
   ChatGPT: { <<: *domain, url: "https://gh-proxy.com/github.com/metacubex/meta-rules-dat/raw/refs/heads/meta/geo/geosite/openai.mrs"} 
   Claude: { <<: *class, url: "https://gh-proxy.com/raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Claude/Claude.list"} 
   Meta AI: { <<: *class, url: "https://gh-proxy.com/raw.githubusercontent.com/liandu2024/clash/refs/heads/main/list/MetaAi.list"} 
@@ -323,13 +331,13 @@ rule-providers:
   谷歌域名: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs"} 
   Twitter: { <<: *domain, url: "https://gh-proxy.com/github.com/metacubex/meta-rules-dat/raw/refs/heads/meta/geo/geosite/x.mrs"} 
   电报域名: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs"} 
-  TikTok: { <<: *domain, url: "https://gh-proxy.com/github.com/metacubex/meta-rules-dat/raw/refs/heads/meta/geo/geosite/tiktok.mrs"} 
+  TikTok: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/tiktok.mrs"} 
   代理顶级域名: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/tld-proxy.mrs"} 
-  代理域名: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/proxy.mrs"} 
+  代理域名: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/gfw.mrs"} 
   直连域名: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/cn.mrs"} 
   私有ip: { <<: *ip, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/privateip.mrs"} 
   国内ip: { <<: *ip, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/cnip.mrs"} 
   谷歌ip: { <<: *ip, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/google.mrs"} 
   电报ip: { <<: *ip, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/telegramip.mrs"} 
-  
+  游戏平台ip: { <<: *ip, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/gamesip.mrs"} 
   广告: { <<: *domain_text, url: "https://raw.githubusercontent.com/yingxiaomo/Mihomo-Personal-Rules/refs/heads/main/rules/custom/uaaad.list"} 
