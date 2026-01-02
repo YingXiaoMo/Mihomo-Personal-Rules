@@ -185,7 +185,7 @@ proxy-groups:
   - { name: Copilot, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Copilot.png" }
   - { name: 油管视频, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/YouTube.png" }
   - { name: 谷歌服务, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Google.png" }
-  - { name: 哔哩哔哩, type: select, proxies: [直连, 香港智能, 台湾智能, 香港手动, 台湾手动], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/bilibili.png" }
+  - { name: 哔哩哔哩, type: select, proxies: [直连, 香港散列, 台湾散列, 香港手动, 台湾手动], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/bilibili.png" }
   - { name: 微软云盘, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/OneDrive.png" }
   - { name: 微软服务, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Microsoft.png" }
   - { name: 网络测试, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Speedtest.png" }
