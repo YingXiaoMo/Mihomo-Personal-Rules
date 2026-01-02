@@ -15,6 +15,7 @@ from sklearn.metrics import mean_absolute_error, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import RobustScaler, StandardScaler
 
+# ================= 配置区域 =================
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 
@@ -22,17 +23,25 @@ DEFAULT_DATA_DIR = PROJECT_ROOT
 DEFAULT_MODEL_PATH = PROJECT_ROOT / "Model.bin"
 CACHE_DIR = SCRIPT_DIR / "cache"
 GO_SOURCE_CACHE_PATH = CACHE_DIR / "transform.go.cache"
-# [修复] 移除了原代码中错误的 Markdown 格式，修正为纯字符串 URL
 GO_SOURCE_URL = "https://raw.githubusercontent.com/vernesong/mihomo/Alpha/component/smart/lightgbm/transform.go"
 
-# 【优化1】特征屏蔽列表：屏蔽所有"资历"特征
-# 包含历史流量、流量密度、历史最高速。
-# 目的：强迫模型只看实时的 Latency 和 Connect Time，实现"新老节点机会均等"。
+# 【最终修正】特征屏蔽列表
+# 这里的逻辑是：屏蔽所有"答案"和"资历"，只留"物理体质"。
 BIASED_FEATURES = [
-    'download_mb', 'upload_mb', 'traffic_density', 'traffic_ratio', 
-    'last_used_seconds', 'duration_minutes', 
+    # 1. 屏蔽累计流量类 (防止马太效应)
+    'download_mb', 'upload_mb', 
+    'traffic_density', 'traffic_ratio', 
     'history_download_mb', 'history_upload_mb',
-    'history_maxuploadrate_kb', 'history_maxdownloadrate_kb' # 新增：屏蔽历史极速
+    
+    # 2. 屏蔽时间类 (只看当前状态)
+    'last_used_seconds', 'duration_minutes', 
+    
+    # 3. 屏蔽历史极速 (防止歧视新节点)
+    'history_maxuploadrate_kb', 'history_maxdownloadrate_kb',
+    
+    # 4. 【关键修正】屏蔽本次测速结果 (防止数据泄露/作弊)
+    # 如果不屏蔽这两个，模型会直接"抄答案"，导致实战失效。
+    'maxuploadrate_kb', 'maxdownloadrate_kb' 
 ]
 
 COMPLEX_FEATURES = [
@@ -55,8 +64,7 @@ COUNT_FEATURES = ['success', 'failure']
 
 LGBM_PARAMS = {
     'objective': 'regression',
-    # 【优化2】将 loss metric 改为 RMSE
-    # 目的：加大对"严重预测错误"（如把死节点预测为高速）的惩罚力度。
+    # 使用 RMSE 严惩大误差，减少断连误判
     'metric': 'rmse',
     'boosting_type': 'gbdt',
     'n_estimators': 1000,
@@ -82,17 +90,20 @@ def print_separator(title=None):
 def fetch_go_source():
     print("\n[步骤1] Go 源码解析")
     
+    # 优先检测本地文件
     local_go_path = PROJECT_ROOT / "transform.go"
     if local_go_path.exists():
         print(f"发现本地 transform.go 文件: {local_go_path}")
         return local_go_path.read_text(encoding='utf-8')
     
+    # 其次检测缓存
     content = ""
     if GO_SOURCE_CACHE_PATH.exists():
         if (time.time() - GO_SOURCE_CACHE_PATH.stat().st_mtime) < 86400:
             print(f"成功加载本地缓存: {GO_SOURCE_CACHE_PATH}")
             return GO_SOURCE_CACHE_PATH.read_text(encoding='utf-8')
 
+    # 最后下载在线文件
     print(f"正在下载 Go 源文件: {GO_SOURCE_URL}")
     try:
         CACHE_DIR.mkdir(exist_ok=True)
@@ -124,7 +135,6 @@ def parse_feature_order(go_content):
         return get_fallback_features()
     
     print(f"成功解析 {len(feature_map)} 个特征的顺序定义")
-    print(f"特征顺序解析完成，共 {len(feature_map)} 个特征")
     return feature_map
 
 def get_fallback_features():
@@ -197,8 +207,8 @@ def preprocess_data(df, feature_order):
     if not TARGET_MAIN:
         raise ValueError("严重错误: 未找到目标列 (maxdownloadrate_kb)")
 
-    # 【优化3】数据清洗核心修改
-    # 将 NaN 填充为 0，标记为断连
+    # 【重要】保留断连数据
+    # 将 NaN 填充为 0，标记为断连，让模型学习"失败"的样子
     df[TARGET_MAIN] = df[TARGET_MAIN].fillna(0)
     
     original_rows = len(df)
@@ -219,6 +229,7 @@ def preprocess_data(df, feature_order):
     if 'latency' in df.columns:
         df['latency_stability'] = df['latency'] / (df['latency'] + 1e-6)
     
+    # 执行特征屏蔽 (归零)
     mask_features = BIASED_FEATURES + COMPLEX_FEATURES
     for col in mask_features:
         if col in df.columns:
@@ -252,13 +263,11 @@ def preprocess_data(df, feature_order):
             scalers['rob_features'] = count_present
 
     if '__file_age_days' in df.columns:
-        # 【优化4】加大时间衰减力度 (0.1 -> 0.5)
-        # 0.5 系数让模型更"喜新厌旧"，优先听信最近 1-3 天的数据
+        # 加大时间衰减 (0.5)，优先使用近 3 天数据
         base_weight = 1.0 / (1.0 + 0.5 * df['__file_age_days'])
         
         if not use_weight_as_fallback:
-            # 稍微加大高速样本的权重系数 (0.05 -> 0.1)
-            # 告诉模型：预测错高速节点的惩罚更重，要优先保证高速节点的准确性。
+            # 稍微加大高速样本的权重
             speed_bonus = np.log1p(df[TARGET_MAIN]) * 0.1
             df['sample_weight'] = base_weight + speed_bonus
         else:
@@ -350,7 +359,7 @@ def training_logger_cn(period=100):
     return _callback
 
 def main():
-    print_separator("Mihomo 智能权重模型训练 (v2.0 极致优化版)")
+    print_separator("Mihomo 智能权重模型训练 (v2.1 修复泄露版)")
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", type=Path, default=DEFAULT_DATA_DIR)
@@ -414,15 +423,15 @@ def main():
     print(f"模型最终评分: {final_score:.3f} / 10.0")
     
     if final_score > 9.0:
-        print("✨ 评级: S级 (极佳) - 规律极强，数据质量完美")
+        print("✨ 评级: S级 (极佳) - 如果分数太高，请检查是否还有特征泄露")
     elif final_score > 7.0:
         print("🟢 评级: A级 (良好) - 模型可用性高")
     elif final_score > 5.0:
-        print("🟡 评级: B级 (及格) - 部分数据可能存在干扰")
+        print("🟡 评级: B级 (及格) - 正常水平，无作弊")
     elif final_score > 3.0:
-        print("🟠 评级: C级 (一般) - 需积累更多优质数据")
+        print("🟠 评级: C级 (一般) - 需积累更多数据")
     else:
-        print("🔴 评级: D级 (不合格) - 数据严重不足或噪声过大")
+        print("🔴 评级: D级 (不合格) - 噪声过大")
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     save_model_and_params(model, scalers, feature_order, args.output)
