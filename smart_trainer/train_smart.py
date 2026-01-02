@@ -63,7 +63,7 @@ LGBM_PARAMS = {
     'objective': 'regression',
     'metric': 'rmse',
     'boosting_type': 'gbdt',
-    'n_estimators': 1000,
+    'n_estimators': 5000,
     'learning_rate': 0.05,
     'num_leaves': 31,
     'max_depth': -1,
