@@ -159,7 +159,7 @@ Other: &Other { filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨�
 # Select 策略通用模板 (用于手动选择)
 Select: &Select { type: select, include-all: true, exclude-type: direct  } 
 # Smart 策略通用模板 (用于智能选择)
-Smart: &Smart { type: smart, include-all: true, uselightgbm: true, collectdata: true, strategy: lgbm, hidden: true, <<: *Check, exclude-type: direct }
+Smart: &Smart { type: smart, include-all: true, uselightgbm: true, collectdata: true, hidden: true, <<: *Check, exclude-type: direct }
 # Url-Test 策略通用模板 (用于自动选择)
 Url-Test: &Url-Test { type: url-test, include-all: true, <<: *Check, hidden: true, exclude-type: direct }
 # Fallback 策略通用模板 (用于故障转移)
