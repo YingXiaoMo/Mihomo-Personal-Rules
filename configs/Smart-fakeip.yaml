@@ -321,7 +321,7 @@ rule-providers:
   私有域名: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/private.mrs"} 
   trackerslist: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/trackerslist.mrs"} 
   直连软件: { <<: *class, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/applications.list"} 
-  哔哩哔哩: { <<: *class, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/bilibili.mrs"} 
+  哔哩哔哩: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/bilibili.mrs"} 
   微软云盘: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/onedrive.mrs"} 
   微软服务: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/microsoft-cn.mrs"} 
   苹果服务: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/apple-cn.mrs"} 
