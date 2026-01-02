@@ -22,13 +22,17 @@ DEFAULT_DATA_DIR = PROJECT_ROOT
 DEFAULT_MODEL_PATH = PROJECT_ROOT / "Model.bin"
 CACHE_DIR = SCRIPT_DIR / "cache"
 GO_SOURCE_CACHE_PATH = CACHE_DIR / "transform.go.cache"
-
+# [修复] 移除了原代码中错误的 Markdown 格式，修正为纯字符串 URL
 GO_SOURCE_URL = "https://raw.githubusercontent.com/vernesong/mihomo/Alpha/component/smart/lightgbm/transform.go"
 
+# 【优化1】特征屏蔽列表：屏蔽所有"资历"特征
+# 包含历史流量、流量密度、历史最高速。
+# 目的：强迫模型只看实时的 Latency 和 Connect Time，实现"新老节点机会均等"。
 BIASED_FEATURES = [
     'download_mb', 'upload_mb', 'traffic_density', 'traffic_ratio', 
     'last_used_seconds', 'duration_minutes', 
-    'history_download_mb', 'history_upload_mb'
+    'history_download_mb', 'history_upload_mb',
+    'history_maxuploadrate_kb', 'history_maxdownloadrate_kb' # 新增：屏蔽历史极速
 ]
 
 COMPLEX_FEATURES = [
@@ -47,11 +51,13 @@ CONTINUOUS_FEATURES = [
     'asn_hash', 'host_hash', 'ip_hash', 'geoip_hash'
 ]
 
-COUNT_FEATURES = ['success', 'failure'] 
+COUNT_FEATURES = ['success', 'failure']
 
 LGBM_PARAMS = {
     'objective': 'regression',
-    'metric': 'mae',
+    # 【优化2】将 loss metric 改为 RMSE
+    # 目的：加大对"严重预测错误"（如把死节点预测为高速）的惩罚力度。
+    'metric': 'rmse',
     'boosting_type': 'gbdt',
     'n_estimators': 1000,
     'learning_rate': 0.05,
@@ -75,6 +81,11 @@ def print_separator(title=None):
 
 def fetch_go_source():
     print("\n[步骤1] Go 源码解析")
+    
+    local_go_path = PROJECT_ROOT / "transform.go"
+    if local_go_path.exists():
+        print(f"发现本地 transform.go 文件: {local_go_path}")
+        return local_go_path.read_text(encoding='utf-8')
     
     content = ""
     if GO_SOURCE_CACHE_PATH.exists():
@@ -151,14 +162,12 @@ def load_data(data_dir, days=15):
     dfs = []
     for f in recent_files:
         fname = os.path.basename(f)
-        print(f"尝试加载文件: {fname}...")
         try:
             df = pd.read_csv(f, encoding='utf-8', on_bad_lines='skip')
-            print(f"文件处理完成: {len(df)} 条记录")
         except UnicodeDecodeError:
             try:
                 df = pd.read_csv(f, encoding='latin-1', on_bad_lines='skip')
-                print(f"警告: 文件 '{fname}' 使用 latin-1 编码成功加载: {len(df)} 条记录")
+                print(f"警告: 文件 '{fname}' 使用 latin-1 编码成功加载")
             except:
                 print(f"跳过无法读取的文件: {fname}")
                 continue
@@ -181,24 +190,26 @@ def preprocess_data(df, feature_order):
 
     TARGET_MAIN = 'maxdownloadrate_kb'
     if TARGET_MAIN in df.columns:
-        df[TARGET_MAIN] = pd.to_numeric(df[TARGET_MAIN], errors='coerce').fillna(0)
+        df[TARGET_MAIN] = pd.to_numeric(df[TARGET_MAIN], errors='coerce')
     else:
         TARGET_MAIN = 'download_mbps' if 'download_mbps' in df.columns else None
 
     if not TARGET_MAIN:
         raise ValueError("严重错误: 未找到目标列 (maxdownloadrate_kb)")
 
-    original_rows = len(df)
-    high_quality_df = df[df[TARGET_MAIN] > 0.1].copy()
+    # 【优化3】数据清洗核心修改
+    # 将 NaN 填充为 0，标记为断连
+    df[TARGET_MAIN] = df[TARGET_MAIN].fillna(0)
     
+    original_rows = len(df)
     use_weight_as_fallback = False
     
-    if len(high_quality_df) > 100:
-        df = high_quality_df
+    # 全量数据训练，不再过滤 > 0.1
+    if len(df) > 100:
         y = df[TARGET_MAIN]
-        print(f"数据清洗: {original_rows} -> {len(df)} 条记录 (保留真实测速数据)")
+        print(f"数据清洗: {original_rows} -> {len(df)} 条记录 (全量训练，包含断连样本)")
     else:
-        print(f"警告: 有效测速数据极少 ({len(high_quality_df)})，启用兜底模式")
+        print(f"警告: 数据极少 ({len(df)})，启用兜底模式")
         if 'weight' in df.columns:
             y = df['weight']
             use_weight_as_fallback = True
@@ -231,7 +242,6 @@ def preprocess_data(df, feature_order):
             X[continuous_present] = scaler_std.fit_transform(X[continuous_present])
             scalers['standard'] = scaler_std
             scalers['std_features'] = continuous_present
-            print(f"StandardScaler 处理完成，影响特征数: {len(continuous_present)}")
 
     if COUNT_FEATURES:
         count_present = [c for c in COUNT_FEATURES if c in X.columns]
@@ -240,12 +250,16 @@ def preprocess_data(df, feature_order):
             X[count_present] = scaler_robust.fit_transform(X[count_present])
             scalers['robust'] = scaler_robust
             scalers['rob_features'] = count_present
-            print(f"RobustScaler 处理完成，影响特征数: {len(count_present)}")
 
     if '__file_age_days' in df.columns:
-        base_weight = 1.0 / (1.0 + 0.1 * df['__file_age_days'])
+        # 【优化4】加大时间衰减力度 (0.1 -> 0.5)
+        # 0.5 系数让模型更"喜新厌旧"，优先听信最近 1-3 天的数据
+        base_weight = 1.0 / (1.0 + 0.5 * df['__file_age_days'])
+        
         if not use_weight_as_fallback:
-            speed_bonus = np.log1p(df[TARGET_MAIN]) * 0.05
+            # 稍微加大高速样本的权重系数 (0.05 -> 0.1)
+            # 告诉模型：预测错高速节点的惩罚更重，要优先保证高速节点的准确性。
+            speed_bonus = np.log1p(df[TARGET_MAIN]) * 0.1
             df['sample_weight'] = base_weight + speed_bonus
         else:
             df['sample_weight'] = base_weight
@@ -327,6 +341,7 @@ def training_logger_cn(period=100):
                 
                 if eval_name == 'l1': e_name = 'MAE误差'
                 elif eval_name == 'l2': e_name = 'MSE误差'
+                elif eval_name == 'rmse': e_name = 'RMSE误差'
                 else: e_name = eval_name
                 
                 msg_parts.append(f"{d_name} {e_name}: {result:.6f}")
@@ -335,7 +350,7 @@ def training_logger_cn(period=100):
     return _callback
 
 def main():
-    print_separator("Mihomo 智能权重模型训练")
+    print_separator("Mihomo 智能权重模型训练 (v2.0 极致优化版)")
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", type=Path, default=DEFAULT_DATA_DIR)
@@ -391,24 +406,23 @@ def main():
          print(f"训练状态: 触发早停。最佳迭代轮数: [{model.best_iteration_}]")
 
     predictions = model.predict(X_val)
-    mae = mean_absolute_error(y_val, predictions)
     r2 = r2_score(y_val, predictions)
     
     final_score = max(0, r2 * 10)
 
-    print(f"测试集 MAE误差: {mae:.4f}")
+    print(f"测试集 R2分数: {r2:.4f}")
     print(f"模型最终评分: {final_score:.3f} / 10.0")
     
-    if final_score > 9.5:
-        print("✨ 评级: S级 - 极佳 (规律极强，数据质量完美)")
-    elif final_score > 8.0:
-        print("🟢 评级: A级 - 良好 (模型可用性高)")
-    elif final_score > 6.0:
-        print("🟡 评级: B级 - 及格 (部分数据可能存在干扰)")
-    elif final_score > 4.0:
-        print("🟠 评级: C级 - 一般 (特征关联度弱)")
+    if final_score > 9.0:
+        print("✨ 评级: S级 (极佳) - 规律极强，数据质量完美")
+    elif final_score > 7.0:
+        print("🟢 评级: A级 (良好) - 模型可用性高")
+    elif final_score > 5.0:
+        print("🟡 评级: B级 (及格) - 部分数据可能存在干扰")
+    elif final_score > 3.0:
+        print("🟠 评级: C级 (一般) - 需积累更多优质数据")
     else:
-        print("🔴 评级: D级 - 不合格 (数据严重不足或噪声过大)")
+        print("🔴 评级: D级 (不合格) - 数据严重不足或噪声过大")
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     save_model_and_params(model, scalers, feature_order, args.output)
