@@ -67,13 +67,14 @@ CONTINUOUS_FEATURES = [
 COUNT_FEATURES = ['success', 'failure']
 
 
+# LightGBM 暴力参数 - 追求过拟合高分节点
 LGBM_PARAMS = {
     'objective': 'regression',
     'metric': 'rmse',
     'boosting_type': 'gbdt',
-    'n_estimators': 10000,      
-    'learning_rate': 0.03,      
-    'num_leaves': 63,           
+    'n_estimators': 5000,       # 调整为 5000 轮，兼顾精度与速度
+    'learning_rate': 0.03,
+    'num_leaves': 63,
     'max_depth': -1,
     'min_child_samples': 10,    
     'subsample': 0.85,
@@ -484,7 +485,7 @@ def main():
     model = lgb.LGBMRegressor(**LGBM_PARAMS)
     
     callbacks = [
-        lgb.early_stopping(stopping_rounds=100, verbose=False),
+        lgb.early_stopping(stopping_rounds=100, verbose=True),
         training_logger(period=200)
     ]
 
@@ -495,6 +496,11 @@ def main():
         eval_sample_weight=[w_val],
         callbacks=callbacks
     )
+
+    if model.best_iteration_ < LGBM_PARAMS['n_estimators']:
+         print(f"训练状态: 触发早停。最佳迭代轮数: [{model.best_iteration_}]")
+    else:
+         print(f"训练状态: 未触发早停 (跑满全量)。最佳迭代轮数: [{model.best_iteration_}]")
 
     # 6. 评估
     preds = model.predict(X_val)
