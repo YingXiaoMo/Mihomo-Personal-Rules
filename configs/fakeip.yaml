@@ -153,8 +153,6 @@ Other: &Other { filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨�
 # 节点分组锚点
 # Select 策略通用模板 (用于手动选择)
 Select: &Select { type: select, include-all: true, exclude-type: direct  } 
-# Smart 策略通用模板 (用于智能选择)
-Smart: &Smart { type: smart, include-all: true, uselightgbm: true, collectdata: true, strategy: sticky-sessions, hidden: true, <<: *Check, exclude-type: direct }  
 # Url-Test 策略通用模板 (用于自动选择)
 Url-Test: &Url-Test { type: url-test, include-all: true, <<: *Check, hidden: true, exclude-type: direct }
 # Fallback 策略通用模板 (用于故障转移)
@@ -165,9 +163,6 @@ RR: &RR { type: load-balance, strategy: round-robin, include-all: true, <<: *Che
 # Load-Balance (散列) 策略通用模板
 # 适用于需要保持客户端连接一致性（例如，防止频繁切换 IP 导致登录失效）的场景
 CH: &CH { type: load-balance, strategy: consistent-hashing, include-all: true, <<: *Check,hidden: true, exclude-type: direct }
-
-
-- { name: 哔哩哔哩, type: select, proxies: [直连, 香港智能, 台湾智能, 香港手动, 台湾手动], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/bilibili.png" }
 
 
 # 代理组配置
