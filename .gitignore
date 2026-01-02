@@ -17,3 +17,4 @@ train.py
 *.csv
 *.log
 *.sqlite3
+*.log
