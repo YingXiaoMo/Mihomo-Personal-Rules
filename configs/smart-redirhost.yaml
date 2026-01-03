@@ -59,18 +59,37 @@ profile:
 sniffer:
   enable: true
   force-dns-mapping: true                                          # 对 redir-host 类型识别的流量进行强制嗅探
-  parse-pure-ip: false                                             # 对所有ip进行强制嗅探
+  parse-pure-ip: true                                              # 对所有ip进行强制嗅探
   override-destination: true                                       # 是否使用嗅探结果作为实际访问
-  sniff: {HTTP: {ports: [80, "8080-8880"], override-destination: true}, TLS: {ports: [443, 8443]}, QUIC: {ports: [443, 8443]}}
-  force-domain: ["+.v2ex.com"]
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
   skip-domain:
+    # --- 智能家居与苹果 ---
+    - "Mijia Cloud"
     - "dlg.io.mi.com"
+    - "+.push.apple.com"
+    - "+.apple.com"
+    # --- 路由器与局域网  ---
+    - "miwifi.com"
+    - "router.asus.com"
+    - "tplogin.cn"
+    - "+.lan"
+    - "+.local"
+    # --- 系统服务 ---
+    - "+.msftconnecttest.com"                                      # Windows 网络连接测试
+    - "+.msftncsi.com"                                             # Windows 网络状态指示器
 
 
 # 入站
 tun:
   enable: true                                                      # 开启tun
-  stack: system                                                     # 三种模式,system（兼容性最好但是udp支持不佳）/gvisor（udp支持好）/mixed（结合前两个的优点）
+  stack: mixed                                                      # 三种模式,system（兼容性最好但是udp支持不佳）/gvisor（udp支持好）/mixed（结合前两个的优点）
   dns-hijack: ["any:53", "tcp://any:53"]                            # 劫持53端口
   auto-route: true                                                  # 自动路由
   auto-redirect: true                                               # 自动重定向
@@ -84,17 +103,17 @@ dns:
   enable: true                                                      # 启用DNS模块 
   listen: 0.0.0.0:7874                                              # 监听地址和端口
   ipv6: true                                                        # 是否启用IPv6
-  respect-rules: true                                               # 让连接DNS服务器时能够遵循规则，也就是通过代理节点连接到上面设置的国外DNS，因为直连可能连接不上  
+  respect-rules: true                                               # 是否让连接DNS服务器时能够遵循规则
   use-hosts: true                                                   # 是否回应配置中的 hosts，默认 true
   use-system-hosts: false                                           # 是否查询系统 hosts 文件，默认 false
-  enhanced-mode: redir-host                                         # 增强模式，支持 redir-host 和 fake-ip 两种模式
+  enhanced-mode: redir-host                                         # 增强模式，支持 redir-host 和 fake-ip 两种模式             
 
 
 # 基础DNS服务器，必须先有它才能使用域名类型的DNS配置，因此必须为IP，此处使用阿里云DNS
-# 下面全是数字dns所以这个可以注释掉
-#  default-nameserver:      
-#    - tls://223.5.5.5
-#    - tls://223.6.6.6
+# 下面全是数字dns这个可以注释掉
+  default-nameserver:      
+    - 223.5.5.5
+    - 223.6.6.6
 
 # 规则匹配到直连时使用的DNS，既然是可以直连的，当然要用国内DNS解析速度更快更稳定
 # 我使用下面的数据库匹配所以把这里注释掉了，需要的可以打开这个，把下面的nameserver-policy注释掉
