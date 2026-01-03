@@ -18,13 +18,13 @@ proxy-providers:
       enable: true                                                 # 是否启用连通性检查         
       url: https://www.gstatic.com/generate_204                    # 用于检查节点连通性的网址
       interval: 300                                                # 检查频率，单位为秒
-    proxy: 🎯 全球直连                                             # 订阅下载时使用的代理名称，若不需要可删除此行                           
+    proxy: DIRECT                                                  # 订阅下载时使用的代理名称，若不需要可删除此行，DIRECT表示直连                           
     override:
-      additional-prefix: ""                                        # 自定义节点名字前缀                  
-#      additional-suffix: "| provider1 suffix"                     # 自定义节点名字后缀                 
+#      additional-prefix: ""                                       # 自定义节点名字前缀                  
+#      additional-suffix: ""                                       # 自定义节点名字后缀                 
       skip-cert-verify: true                                       # 是否跳过节点的证书验证，默认为 false
       udp: true                                                    # 是否启用 UDP 转发，默认为 true                   
-#    filter: "(?i)新加坡|坡|狮城|SG|Singapore"                       # 订阅内节点的过滤规则，支持正则表达式  
+#    filter: "(?i)新加坡|坡|狮城|SG|Singapore"                      # 订阅内节点的过滤规则，支持正则表达式  
 
 # 要添加多个机场就把上面的整个 Airport1 块复制粘贴，改个名字就行了
 
