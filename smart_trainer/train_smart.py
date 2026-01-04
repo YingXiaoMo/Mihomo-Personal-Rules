@@ -224,10 +224,8 @@ def load_data(data_dir, days=90):
 def preprocess_data(df, feature_order):
     print("\n[步骤3] 特征提取与目标构建 (极速模式)")
 
-    # 1. 确定目标列 (我们只看 MaxDownloadRate)
     target_col = 'maxdownloadrate_kb'
     if target_col not in df.columns:
-        # 兼容旧版本数据列名
         if 'download_mbps' in df.columns:
             df[target_col] = df['download_mbps'] * 1024 # 转换为 kb
         else:
@@ -237,7 +235,7 @@ def preprocess_data(df, feature_order):
     df[target_col] = df[target_col].fillna(0)
     
     # --------------------------------------------------------------------------
-    # 核心黑科技：构建 "惩罚性" 目标变量 (Punished Target)
+    # 构建 惩罚性 目标变量 
     # --------------------------------------------------------------------------
     # 目标：让模型预测的值不仅仅是速度，而是 "稳定速度"。
     # 手段：如果节点有丢包或高延迟，我们在训练时人为把它的 Target 值打低。
@@ -245,7 +243,9 @@ def preprocess_data(df, feature_order):
     # --------------------------------------------------------------------------
     
     raw_speed = df[target_col]
-    
+    # 强制封顶策略：限制最大速度为 1000Mbps (1000000 kbps)
+    # 作用：防止某个节点分数过高导致无法切换
+    raw_speed = raw_speed.clip(upper=1000000)
     # 惩罚因子 1: 丢包惩罚
     # failure > 0 时，惩罚极其严厉。failure=1 -> 分数变为 1/3; failure=2 -> 分数变为 1/5
     failure_penalty = 1.0 / (1.0 + df['failure'].fillna(0) * 2.0)
@@ -267,7 +267,7 @@ def preprocess_data(df, feature_order):
               f"延迟: {latency_val.iloc[i]:.0f} ms -> 训练目标值: {y.iloc[i]:.2f}")
 
     # --------------------------------------------------------------------------
-    # 策略优化：新节点探索机制 (Exploration Strategy)
+    # 策略优化：新节点探索机制
     # 问题：如果完全依赖历史数据，新节点(历史为0)会被永远打入冷宫。
     # 解决：随机将 25% 数据的"历史特征"强行置为 0。
     # 效果：教会模型 "即使没有历史数据，只要延迟低，也有可能是个好节点"。
@@ -281,13 +281,13 @@ def preprocess_data(df, feature_order):
             # 对于选中的行，将历史特征抹去 (模拟成新节点)
             df.loc[exploration_mask, col] = 0.0
 
-    # 2. 特征屏蔽 (Masking)
+    # 2. 特征屏蔽 
     # 将不需要的特征置为 0，防止噪声干扰
     for col in IGNORED_FEATURES:
         if col in df.columns:
             df[col] = 0.0
 
-    # 3. 按顺序提取特征矩阵 X
+    # 3. 特征排序
     ordered_cols = [feature_order[i] for i in sorted(feature_order.keys())]
     
     # 确保所有列都存在
@@ -300,11 +300,11 @@ def preprocess_data(df, feature_order):
     # 只保留数值类型
     X = X.select_dtypes(include=np.number)
     
-    # 4. 特征标准化 (Standardization)
+    # 4. 特征标准化
     print("\n[步骤4] 特征标准化")
     scalers = {}
     
-    # 数值型特征 -> StandardScaler
+    # 数值型特征
     std_cols = [c for c in CONTINUOUS_FEATURES if c in X.columns]
     if std_cols:
         scaler_std = StandardScaler()
@@ -313,7 +313,7 @@ def preprocess_data(df, feature_order):
         scalers['std_features'] = std_cols
         print(f"StandardScaler 应用于 {len(std_cols)} 个特征")
 
-    # 计数型特征 -> RobustScaler
+    # 计数型特征
     rob_cols = [c for c in COUNT_FEATURES if c in X.columns]
     if rob_cols:
         scaler_rob = RobustScaler()
@@ -322,7 +322,7 @@ def preprocess_data(df, feature_order):
         scalers['rob_features'] = rob_cols
         print(f"RobustScaler 应用于 {len(rob_cols)} 个特征")
 
-    # 5. 样本权重 (Sample Weights) - 优化：时间主导的乘法权重
+    # 5. 样本权重 - 优化：时间主导的乘法权重
     # --------------------------------------------------------------------------
     # 策略：指数级时间衰减
     # Day 0: 100%, Day 1: 82%, Day 3: 55%, Day 7: 25%, Day 14: 6%
@@ -336,7 +336,18 @@ def preprocess_data(df, feature_order):
     
     # 最终权重 = 时间衰减系数 * (基础分 + 速度加成)
     # 使用乘法：确保旧数据即使速度再快，总权重也被时间系数强行压低
+    # 最终权重 = 时间衰减系数 * (基础分 + 速度加成)
     sample_weights = time_decay * (1.0 + speed_bonus)
+
+    # UDP 奖赏机制
+    # 作用：如果 CSV 记录显示该节点支持 UDP，额外给予 20% 的权重加成
+    # 这会引导 AI 更倾向于选择支持 UDP 的节点，从而优化 Telegram 和游戏体验
+    if 'is_udp' in df.columns:
+        # 如果 is_udp 为 1，则权重 * 1.2；如果为 0，则权重 * 1.0 (不变)
+        udp_bonus = 1.0 + (df['is_udp'].fillna(0) * 0.2)
+        sample_weights = sample_weights * udp_bonus
+
+    return X, y, sample_weights, scalers
 
     return X, y, sample_weights, scalers
 
@@ -445,8 +456,8 @@ def main():
 
     # 2. 加载数据
     try:
-        # 默认只加载最近 14 天的数据，保证时效性
-        df = load_data(args.data_dir, days=14)
+        # 默认只加载最近 15 天的数据，保证时效性
+        df = load_data(args.data_dir, days=15)
     except Exception as e:
         print(f"错误: {e}")
         sys.exit(1)
