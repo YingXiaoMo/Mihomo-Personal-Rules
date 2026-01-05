@@ -235,7 +235,7 @@ def preprocess_data(df, feature_order):
     df[target_col] = df[target_col].fillna(0)
     
     # --------------------------------------------------------------------------
-    # 构建 惩罚性 目标变量 
+    # 构建惩罚性目标变量 
     # --------------------------------------------------------------------------
     # 目标：让模型预测的值不仅仅是速度，而是 "稳定速度"。
     # 手段：如果节点有丢包或高延迟，我们在训练时人为把它的 Target 值打低。
@@ -243,9 +243,9 @@ def preprocess_data(df, feature_order):
     # --------------------------------------------------------------------------
     
     raw_speed = df[target_col]
-    # 强制封顶策略：限制最大速度为 1000Mbps (1000000 kbps)
+    # 强制封顶策略：限制最大速度为 500Mbps (500000 kbps)
     # 作用：防止某个节点分数过高导致无法切换
-    raw_speed = raw_speed.clip(upper=1000000)
+    raw_speed = raw_speed.clip(upper=500000)
     # 惩罚因子 1: 丢包惩罚
     # failure > 0 时，惩罚极其严厉。failure=1 -> 分数变为 1/3; failure=2 -> 分数变为 1/5
     failure_penalty = 1.0 / (1.0 + df['failure'].fillna(0) * 2.0)
@@ -346,8 +346,6 @@ def preprocess_data(df, feature_order):
         # 如果 is_udp 为 1，则权重 * 1.2；如果为 0，则权重 * 1.0 (不变)
         udp_bonus = 1.0 + (df['is_udp'].fillna(0) * 0.2)
         sample_weights = sample_weights * udp_bonus
-
-    return X, y, sample_weights, scalers
 
     return X, y, sample_weights, scalers
 
