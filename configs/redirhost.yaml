@@ -173,84 +173,84 @@ CH: &CH { type: load-balance, strategy: consistent-hashing, include-all: true, <
 
 # 代理组配置
 proxy-groups:
-  - { name: 漏网之鱼, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/match.png" }
-  - { name: 游戏平台, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Steam.png" }
-  - { name: GitHub, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/GitHub.png" }
-  - { name: 电报消息, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Telegram.png" }
-  - { name: AI服务, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/AI.png" }
-  - { name: ChatGPT, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/ChatGPT.png" }
-  - { name: Claude, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Claude.png" }
-  - { name: MetaAI, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/MetaAI.png" }
-  - { name: Perplexity, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Perplexity.png" }
-  - { name: Gemini, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Gemini.png" }
-  - { name: Copilot, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Copilot.png" }
-  - { name: 油管视频, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/YouTube.png" }
-  - { name: 谷歌服务, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Google.png" }
-  - { name: 哔哩哔哩, type: select, proxies: [直连, 香港散列, 台湾散列, 香港手动, 台湾手动], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/bilibili.png" }
-  - { name: 微软云盘, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/OneDrive.png" }
-  - { name: 微软服务, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Microsoft.png" }
-  - { name: 网络测试, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Speedtest.png" }
-  - { name: Twitter, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Twitter.png" }
-  - { name: TikTok, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Tiktok.png" }
-  - { name: 代理域名, <<: *all, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Global.png" }
-  - { name: 直连, type: select, proxies: [DIRECT], hidden: true, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Direct.png" }
+  - { name: 漏网之鱼, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/match.png" }
+  - { name: 游戏平台, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Steam.png" }
+  - { name: GitHub, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/GitHub.png" }
+  - { name: 电报消息, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Telegram.png" }
+  - { name: AI服务, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/AI.png" }
+  - { name: ChatGPT, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/ChatGPT.png" }
+  - { name: Claude, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Claude.png" }
+  - { name: MetaAI, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/MetaAI.png" }
+  - { name: Perplexity, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Perplexity.png" }
+  - { name: Gemini, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Gemini.png" }
+  - { name: Copilot, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Copilot.png" }
+  - { name: 油管视频, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/YouTube.png" }
+  - { name: 谷歌服务, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Google.png" }
+  - { name: 哔哩哔哩, type: select, proxies: [直连, 香港散列, 台湾散列, 香港手动, 台湾手动], icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/bilibili.png" }
+  - { name: 微软云盘, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/OneDrive.png" }
+  - { name: 微软服务, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Microsoft.png" }
+  - { name: 网络测试, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Speedtest.png" }
+  - { name: Twitter, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Twitter.png" }
+  - { name: TikTok, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Tiktok.png" }
+  - { name: 代理域名, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Global.png" }
+  - { name: 直连, type: select, proxies: [DIRECT], hidden: true, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Direct.png" }
 
 
 # 全部节点
-  - { name: 全部手动, <<: *Select, <<: *Check, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Proxy.png" }
-# - { name: 全部自动, <<: *Url-Test, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Auto.png" }
-# - { name: 全部智能, <<: *Smart, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Magic.png" }
-# - { name: 全部故转, <<: *Fallback, include-all: true, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Loop.png" }
-# - { name: 轮询负载, <<: *RR, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Round_Robin.png" }
-# - { name: 散列负载, <<: *CH, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Final.png" }
+  - { name: 全部手动, <<: *Select, <<: *Check, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Proxy.png" }
+# - { name: 全部自动, <<: *Url-Test, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Auto.png" }
+# - { name: 全部智能, <<: *Smart, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Magic.png" }
+# - { name: 全部故转, <<: *Fallback, include-all: true, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Loop.png" }
+# - { name: 轮询负载, <<: *RR, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Round_Robin.png" }
+# - { name: 散列负载, <<: *CH, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Final.png" }
 
 # 手动选择
-  - { name: 新加坡手动, <<: *Select, <<: *Check, <<: *SG, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png" }
-  - { name: 香港手动, <<: *Select, <<: *Check, <<: *HK, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png" }
-  - { name: 台湾手动, <<: *Select, <<: *Check, <<: *TW, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png" }
-  - { name: 日本手动, <<: *Select, <<: *Check, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png" }
-  - { name: 美国手动, <<: *Select, <<: *Check, <<: *US, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png" }
-  - { name: 其他手动, <<: *Select, <<: *Check, <<: *Other, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
-  - { name: 自建手动, <<: *Select, <<: *Check,<<: *ZJ, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png"}
+  - { name: 新加坡手动, <<: *Select, <<: *Check, <<: *SG, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png" }
+  - { name: 香港手动, <<: *Select, <<: *Check, <<: *HK, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png" }
+  - { name: 台湾手动, <<: *Select, <<: *Check, <<: *TW, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png" }
+  - { name: 日本手动, <<: *Select, <<: *Check, <<: *JP, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png" }
+  - { name: 美国手动, <<: *Select, <<: *Check, <<: *US, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png" }
+  - { name: 其他手动, <<: *Select, <<: *Check, <<: *Other, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
+  - { name: 自建手动, <<: *Select, <<: *Check,<<: *ZJ, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png"}
 
 # dns
-  - { name: DNS服务, type: url-test, <<: *Check, hidden: true, proxies: [ 新加坡自动, 香港自动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Area.png"}
+  - { name: DNS服务, type: url-test, <<: *Check, hidden: true, proxies: [ 新加坡自动, 香港自动 ], icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Area.png"}
 
 # 故障转移 
-# - { name: 新加坡故转, <<: *Fallback, proxies: [ 新加坡自动, 新加坡手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
-# - { name: 香港故转, <<: *Fallback, proxies: [ 香港自动, 香港手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
-# - { name: 台湾故转, <<: *Fallback, proxies: [ 台湾自动, 台湾手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png"}
-# - { name: 日本故转, <<: *Fallback, proxies: [ 日本自动, 日本手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
-# - { name: 美国故转, <<: *Fallback, proxies: [ 美国自动, 美国手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
-# - { name: 其他故转, <<: *Fallback, proxies: [ 其他自动, 其他手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
-# - { name: 自建故转, <<: *Fallback, proxies: [ 自建自动, 自建手动 ], icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png"}
+# - { name: 新加坡故转, <<: *Fallback, proxies: [ 新加坡自动, 新加坡手动 ], icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
+# - { name: 香港故转, <<: *Fallback, proxies: [ 香港自动, 香港手动 ], icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
+# - { name: 台湾故转, <<: *Fallback, proxies: [ 台湾自动, 台湾手动 ], icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png"}
+# - { name: 日本故转, <<: *Fallback, proxies: [ 日本自动, 日本手动 ], icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
+# - { name: 美国故转, <<: *Fallback, proxies: [ 美国自动, 美国手动 ], icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
+# - { name: 其他故转, <<: *Fallback, proxies: [ 其他自动, 其他手动 ], icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
+# - { name: 自建故转, <<: *Fallback, proxies: [ 自建自动, 自建手动 ], icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png"}
 
 # 自动选择
-  - { name: 新加坡自动, <<: *Url-Test, <<: *SG, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
-  - { name: 香港自动, <<: *Url-Test, <<: *HK, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
-# - { name: 台湾自动, <<: *Url-Test, <<: *TW, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png"}
-# - { name: 日本自动, <<: *Url-Test, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
-# - { name: 美国自动, <<: *Url-Test, <<: *US, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
-# - { name: 其他自动, <<: *Url-Test, <<: *Other, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
-# - { name: 自建自动, <<: *Url-Test, <<: *ZJ, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png"}
+  - { name: 新加坡自动, <<: *Url-Test, <<: *SG, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
+  - { name: 香港自动, <<: *Url-Test, <<: *HK, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
+# - { name: 台湾自动, <<: *Url-Test, <<: *TW, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png"}
+# - { name: 日本自动, <<: *Url-Test, <<: *JP, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
+# - { name: 美国自动, <<: *Url-Test, <<: *US, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
+# - { name: 其他自动, <<: *Url-Test, <<: *Other, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
+# - { name: 自建自动, <<: *Url-Test, <<: *ZJ, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png"}
 
 # 轮询负载 
-# - { name: 新加坡轮询, <<: *RR, <<: *SG, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
-# - { name: 香港轮询, <<: *RR, <<: *HK, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
-# - { name: 台湾轮询, <<: *RR, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png"}
-# - { name: 日本轮询, <<: *RR, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
-# - { name: 美国轮询, <<: *RR, <<: *US, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
-# - { name: 其他轮询, <<: *RR, <<: *Other, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
-# - { name: 自建轮询, <<: *RR, <<: *ZJ, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png" }
+# - { name: 新加坡轮询, <<: *RR, <<: *SG, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
+# - { name: 香港轮询, <<: *RR, <<: *HK, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
+# - { name: 台湾轮询, <<: *RR, <<: *JP, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png"}
+# - { name: 日本轮询, <<: *RR, <<: *JP, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
+# - { name: 美国轮询, <<: *RR, <<: *US, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
+# - { name: 其他轮询, <<: *RR, <<: *Other, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
+# - { name: 自建轮询, <<: *RR, <<: *ZJ, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png" }
 
 # 散列负载 
- - { name: 新加坡散列, <<: *CH, <<: *SG, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
- - { name: 香港散列, <<: *CH, <<: *HK, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
- - { name: 台湾散列, <<: *CH, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png"}
- - { name: 日本散列, <<: *CH, <<: *JP, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
- - { name: 美国散列, <<: *CH, <<: *US, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
- - { name: 其他散列, <<: *CH, <<: *Other, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
- - { name: 自建散列, <<: *CH, <<: *ZJ, icon: "https://cdn.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png" }
+ - { name: 新加坡散列, <<: *CH, <<: *SG, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
+ - { name: 香港散列, <<: *CH, <<: *HK, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
+ - { name: 台湾散列, <<: *CH, <<: *JP, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Taiwan.png"}
+ - { name: 日本散列, <<: *CH, <<: *JP, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Japan.png"}
+ - { name: 美国散列, <<: *CH, <<: *US, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
+ - { name: 其他散列, <<: *CH, <<: *Other, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
+ - { name: 自建散列, <<: *CH, <<: *ZJ, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png" }
 
 
 # 规则匹配
