@@ -124,9 +124,7 @@ class GoTransformParser:
     def get_order(self):
         return self.feature_order
 
-# ==============================================================================
-# 核心逻辑
-# ==============================================================================
+
 
 def fetch_go_source():
     print("\n[步骤1] Go 源码解析")
@@ -222,7 +220,7 @@ def load_data(data_dir, days=90):
     return merged_df
 
 def preprocess_data(df, feature_order):
-    print("\n[步骤3] 特征提取与目标构建 (极速模式)")
+    print("\n[步骤3] 特征提取与目标构建 (v4.5 阶梯熔断版)")
 
     target_col = 'maxdownloadrate_kb'
     if target_col not in df.columns:
@@ -235,43 +233,54 @@ def preprocess_data(df, feature_order):
     df[target_col] = df[target_col].fillna(0)
     
     # --------------------------------------------------------------------------
-    # 构建惩罚性目标变量 
-    # --------------------------------------------------------------------------
-    # 目标：让模型预测的值不仅仅是速度，而是 "稳定速度"。
-    # 手段：如果节点有丢包或高延迟，我们在训练时人为把它的 Target 值打低。
-    # 结果：模型在推理时，会给那些 "快但丢包" 的节点打出很低的预测分，从而避开它们。
+    # 核心修改区：策略逻辑 (500M封顶 + 阶梯熔断 + 抖动防御)
     # --------------------------------------------------------------------------
     
     raw_speed = df[target_col]
-    # 强制封顶策略：限制最大速度为 500Mbps (500000 kbps)
-    # 作用：防止某个节点分数过高导致无法切换
+    # 1. 宽带封顶：500Mbps (500000 kbps)
+    # 依据你的实际情况，超过这个速度的视为噪声，直接削平
     raw_speed = raw_speed.clip(upper=500000)
-    # 惩罚因子 1: 丢包惩罚
-    # failure > 0 时，惩罚极其严厉。failure=1 -> 分数变为 1/3; failure=2 -> 分数变为 1/5
-    failure_penalty = 1.0 / (1.0 + df['failure'].fillna(0) * 2.0)
+
+    # 2. 阶梯式失败惩罚
+    # 逻辑：给一次机会 (打3.5折)，第二次直接熔断 (保留1%)。
+    failure_val = df['failure'].fillna(0)
+    cond_list = [
+        failure_val == 0,      # 状态完美
+        failure_val == 1       # 偶发波动 (只断了一次)
+    ]
+    choice_list = [
+        1.0,                   # 不扣分
+        0.35                   # 打3.5折 (保留一定竞争力，防止误杀顶级节点)
+    ]
+    # 默认值 (failure > 1)：连续断连 -> 直接保留 1% 分数 (熔断切换)
+    failure_penalty = np.select(cond_list, choice_list, default=0.01)
     
-    # 惩罚因子 2: 延迟惩罚
-    # 延迟越高，分数越低。每 1000ms 延迟，分数打 8 折。
-    # 主要是为了剔除那些 2000ms+ 的假死节点
-    latency_val = df['latency'].fillna(10000)
-    latency_penalty = 1.0 / (1.0 + (latency_val / 4000.0)) 
+    # 3. 延迟动态惩罚
+    # 逻辑：400ms 以内几乎不扣分，超过 400ms 后分数断崖式下跌
+    latency_val = df['latency'].fillna(5000)
+    latency_penalty = 1.0 / (1.0 + np.exp((latency_val - 600) / 100.0))
     
-    # 最终训练目标：(物理速度) * (丢包惩罚) * (延迟惩罚)
-    # 这样训练出来的模型，预测值越高，代表节点 "既快又稳"
-    y = raw_speed * failure_penalty * latency_penalty
+    # 4. 抖动防御 (Jitter)
+    # 逻辑：如果存在抖动数据，超过 50ms 开始扣分，防止选到“心率不齐”的节点
+    if 'jitter' in df.columns:
+        jitter_val = df['jitter'].fillna(0)
+        # 平方级惩罚：抖动越大扣分越狠
+        jitter_penalty = 1.0 / (1.0 + np.square(np.maximum(0, jitter_val - 50) / 100.0))
+    else:
+        jitter_penalty = 1.0
+
+    # 最终训练目标：(物理速度) * (各项惩罚)
+    y = raw_speed * failure_penalty * latency_penalty * jitter_penalty
+    
+    # --------------------------------------------------------------------------
     
     # 记录日志看看效果
     print(f"目标构建示例 (前5条):")
     for i in range(min(5, len(df))):
-        print(f"  原始速度: {raw_speed.iloc[i]:.0f} kbps, 失败数: {df['failure'].iloc[i]}, "
+        print(f"  原始速度: {raw_speed.iloc[i]:.0f} kbps, 失败数: {failure_val.iloc[i]}, "
               f"延迟: {latency_val.iloc[i]:.0f} ms -> 训练目标值: {y.iloc[i]:.2f}")
 
-    # --------------------------------------------------------------------------
     # 策略优化：新节点探索机制
-    # 问题：如果完全依赖历史数据，新节点(历史为0)会被永远打入冷宫。
-    # 解决：随机将 25% 数据的"历史特征"强行置为 0。
-    # 效果：教会模型 "即使没有历史数据，只要延迟低，也有可能是个好节点"。
-    # --------------------------------------------------------------------------
     history_cols = ['history_maxdownloadrate_kb', 'history_download_mb', 'last_used_seconds']
     # 创建一个随机掩码，25% 的概率为 True
     exploration_mask = np.random.rand(len(df)) < 0.25
@@ -323,27 +332,16 @@ def preprocess_data(df, feature_order):
         print(f"RobustScaler 应用于 {len(rob_cols)} 个特征")
 
     # 5. 样本权重 - 优化：时间主导的乘法权重
-    # --------------------------------------------------------------------------
-    # 策略：指数级时间衰减
-    # Day 0: 100%, Day 1: 82%, Day 3: 55%, Day 7: 25%, Day 14: 6%
-    # 越旧的数据，对模型的影响力呈断崖式下跌。
-    # --------------------------------------------------------------------------
     time_decay = np.exp(-0.2 * df['__file_age_days'])
     
     # 速度加成：依然保留对高速样本的关注，但必须受制于时间衰减
-    # 速度越快，权重会有 1.0 ~ 2.0 倍的加成
     speed_bonus = np.log1p(raw_speed) / 12.0  
     
-    # 最终权重 = 时间衰减系数 * (基础分 + 速度加成)
-    # 使用乘法：确保旧数据即使速度再快，总权重也被时间系数强行压低
     # 最终权重 = 时间衰减系数 * (基础分 + 速度加成)
     sample_weights = time_decay * (1.0 + speed_bonus)
 
     # UDP 奖赏机制
-    # 作用：如果 CSV 记录显示该节点支持 UDP，额外给予 20% 的权重加成
-    # 这会引导 AI 更倾向于选择支持 UDP 的节点，从而优化 Telegram 和游戏体验
     if 'is_udp' in df.columns:
-        # 如果 is_udp 为 1，则权重 * 1.2；如果为 0，则权重 * 1.0 (不变)
         udp_bonus = 1.0 + (df['is_udp'].fillna(0) * 0.2)
         sample_weights = sample_weights * udp_bonus
 
@@ -436,7 +434,7 @@ def training_logger(period=100):
     return _callback
 
 def main():
-    print_separator("Mihomo 极速权重模型训练器 (Speed & Stability First)")
+    print_separator("Mihomo 极速权重模型训练器 (v4.5 定制版)")
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", type=Path, default=DEFAULT_DATA_DIR)
