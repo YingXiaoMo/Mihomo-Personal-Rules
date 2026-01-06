@@ -33,7 +33,7 @@ DE: &DE { filter: "(?i)德国|Germany|Deutschland|Frankfurt|Berlin|法兰克福|
 FR: &FR { filter: "(?i)法国|France|Paris|巴黎|🇫🇷" }
 NL: &NL { filter: "(?i)荷兰|Netherlands|Dutch|Amsterdam|阿姆斯特丹|🇳🇱" }
 RU: &RU { filter: "(?i)俄罗斯|Russia|Moscow|Siberia|莫斯科|圣彼得堡|西伯利亚|🇷🇺" }
-)
+
 EU_Other: &EU_Other { filter: "(?i)土耳其|Turkey|意大利|Italy|西班牙|Spain|葡萄牙|Portugal|瑞士|Swiss|Switzerland|瑞典|Sweden|乌克兰|Ukraine|爱尔兰|Ireland|挪威|Norway|芬兰|Finland|丹麦|Denmark|波兰|Poland|奥地利|Austria|罗马尼亚|Romania|希腊|Greece|冰岛|Iceland|匈牙利|Hungary" }
 
 # --- 05. 中东/非洲/大洋洲 ---
