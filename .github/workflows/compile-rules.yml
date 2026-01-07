@@ -18,14 +18,13 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install Mihomo (Auto Latest Standard)
+      - name: Install Mihomo (Auto Latest)
         run: |
+  
           VERSION=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-          
           echo "Detected latest version: ${VERSION}"
           
           URL="https://github.com/MetaCubeX/mihomo/releases/download/${VERSION}/mihomo-linux-amd64-${VERSION}.gz"
-          
           echo "Downloading from: $URL"
           
           wget -O mihomo.gz "$URL"
@@ -34,13 +33,12 @@ jobs:
 
       - name: Compile Rules
         run: |
-          mkdir -p rules
           for file in rules/*.list; do
+            dir=$(dirname "$file")
             filename=$(basename "$file")
             name="${filename%.*}"
-            output="rules/${name}.mrs"
+            output="${dir}/${name}.mrs"
             
-            # Skip unsupported or raw-only lists
             if [[ "$filename" == "gta.list" || "$filename" == "proxydns.list" ]]; then
               echo "Skipping $filename (No compilation needed)"
               continue
@@ -49,9 +47,9 @@ jobs:
             type="domain"
             [[ "$filename" == *"ip"* ]] && type="ipcidr"
             
-            echo "Compiling $filename to $output (Type: $type)..."
+            echo "Compiling $file to $output (Type: $type)..."
             
-            temp_file="rules/${name}.temp.list"
+            temp_file="${dir}/${name}.temp.list"
             
             grep -v '^#' "$file" | grep -v '^\s*$' | tr -d '\r' > "$temp_file"
             
@@ -63,4 +61,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: auto compile rules to .mrs binary"
-          file_pattern: 'rules/*.mrs'
+          file_pattern: '**/*.mrs'
