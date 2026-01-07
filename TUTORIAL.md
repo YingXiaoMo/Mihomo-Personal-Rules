@@ -10,7 +10,7 @@
 
 2. 准备 Mihomo 数据：启用 Smart 模式，导出 CSV 文件到项目根目录。
 
-   **可选**: 将 [Mihomo 源码](https://github.com/vernesong/mihomo/blob/Alpha/component/smart/lightgbm/transform.go#L13)中的 `transform.go` 文件复制到项目根目录，脚本会优先使用本地文件，避免网络下载。
+   **可选**: 将 [Mihomo 源码](https://github.com/vernesong/mihomo/blob/Alpha/component/smart/lightgbm/transform.go#L13)中的 `transform.go` 文件复制到脚本同目录，脚本会优先使用本地文件，避免网络下载。
 
 ## 使用步骤 
 

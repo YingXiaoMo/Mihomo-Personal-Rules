@@ -5,482 +5,295 @@ import sys
 import glob
 import time
 from pathlib import Path
+import requests
 
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
-import requests
 from sklearn.metrics import r2_score
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import RobustScaler, StandardScaler
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
-
 DEFAULT_DATA_DIR = PROJECT_ROOT
 DEFAULT_MODEL_PATH = PROJECT_ROOT / "Model.bin"
-CACHE_DIR = SCRIPT_DIR / "cache"
-GO_SOURCE_CACHE_PATH = CACHE_DIR / "transform.go.cache"
-GO_SOURCE_URL = "https://raw.githubusercontent.com/vernesong/mihomo/Alpha/component/smart/lightgbm/transform.go"
 
-IGNORED_FEATURES = [
-    'upload_mb', 
-    'history_upload_mb',
-    'maxuploadrate_kb',         
-    'history_maxuploadrate_kb',
-    
-    'asn_feature', 
-    'country_feature', 
-    'address_feature', 
-    'port_feature', 
-    'connection_type_feature',
-    
-    'traffic_density', 
-    'traffic_ratio'
+
+GO_LOCAL_PATH = SCRIPT_DIR / "transform.go"
+
+GO_REMOTE_URL = "https://raw.githubusercontent.com/vernesong/mihomo/Alpha/component/smart/lightgbm/transform.go"
+
+STD_FEATURES = [
+    'connect_time', 'latency', 'download_mb', 'history_download_mb',
+    'maxdownloadrate_kb', 'history_maxdownloadrate_kb', 'duration_minutes', 
+    'last_used_seconds', 'upload_mb', 'history_upload_mb', 
+    'maxuploadrate_kb', 'history_maxuploadrate_kb', 'traffic_ratio', 'traffic_density',
+    'asn_hash', 'host_hash', 'ip_hash', 'geoip_hash' 
 ]
 
-CONTINUOUS_FEATURES = [
-    'connect_time', 'latency', 
-    'download_mb', 'history_download_mb', 
-    'maxdownloadrate_kb', 'history_maxdownloadrate_kb', 
-    'duration_minutes', 'last_used_seconds',
-    'asn_hash', 'host_hash', 'ip_hash', 'geoip_hash',
-    'upload_mb', 'history_upload_mb', 'maxuploadrate_kb', 'history_maxuploadrate_kb',
-    'traffic_density', 'traffic_ratio'
-]
-
-COUNT_FEATURES = ['success', 'failure']
-
+ROB_FEATURES = ['success', 'failure']
 
 LGBM_PARAMS = {
     'objective': 'regression',
     'metric': 'rmse',
     'boosting_type': 'gbdt',
-    'n_estimators': 10000,       
-    'learning_rate': 0.03,
-    'num_leaves': 63,
+    'n_estimators': 5000,        # 树的数量
+    'learning_rate': 0.05,       # 学习率
+    'num_leaves': 31,            # 叶子节点数
     'max_depth': -1,
-    'min_child_samples': 10,    
-    'subsample': 0.85,
-    'colsample_bytree': 0.85,
+    'min_child_samples': 20,
+    'subsample': 0.8,            # 行采样
+    'colsample_bytree': 0.8,     # 列采样
+    'reg_alpha': 0.1,            # L1 正则
+    'reg_lambda': 0.1,           # L2 正则
     'random_state': 42,
     'n_jobs': -1,
     'verbosity': -1
 }
 
-
 def print_separator(title=None):
+    print("=" * 60)
     if title:
-        print("=" * 60)
         print(f"{title}")
         print("=" * 60)
+
+def get_feature_order():
+    """
+    优先读取本地 transform.go，失败则下载在线版本
+    """
+    if GO_LOCAL_PATH.exists():
+        print(f"📂 [本地模式] 检测到源码: {GO_LOCAL_PATH}")
+        try:
+            content = GO_LOCAL_PATH.read_text(encoding='utf-8')
+            return parse_go_content(content)
+        except Exception as e:
+            print(f"   ⚠️ 本地读取失败 ({e})，切换至在线模式...")
     else:
-        print("=" * 60)
+        print("   ℹ️ 未检测到本地 transform.go，切换至在线模式...")
 
-class GoTransformParser:
-    """
-    Go 源码解析器 (增强版)
-    """
-    def __init__(self, content: str):
-        self.content = content
-        self.feature_order = self._parse_feature_order()
-
-    def _parse_feature_order(self):
-        print("开始解析 getDefaultFeatureOrder 函数...")
-        pattern = (
-            r'func getDefaultFeatureOrder\(\) map\[int\]string \{\s*'
-            r'return map\[int\]string\{(.*?)\}\s*\}'
-        )
-        match = re.search(pattern, self.content, re.DOTALL)
-        
-        if not match:
-            print("警告: 未能在源码中找到特征定义块，使用内置后备配置")
-            return self._get_fallback_config()
-        
-        body = match.group(1)
-        pairs = re.findall(r'(\d+):\s*"([^"]+)"', body)
-        
-        if not pairs:
-            print("警告: 解析到的特征列表为空，使用后备配置")
-            return self._get_fallback_config()
-            
-        feature_map = {int(idx): name for idx, name in pairs}
-        print(f"成功解析 {len(feature_map)} 个特征")
-        return feature_map
-
-    def _get_fallback_config(self):
-        features = [
-            'success', 'failure', 'connect_time', 'latency', 'upload_mb', 
-            'history_upload_mb', 'maxuploadrate_kb', 'history_maxuploadrate_kb',
-            'download_mb', 'history_download_mb', 'maxdownloadrate_kb', 
-            'history_maxdownloadrate_kb', 'duration_minutes', 'last_used_seconds', 
-            'is_udp', 'is_tcp', 'asn_feature', 'country_feature', 'address_feature', 
-            'port_feature', 'traffic_ratio', 'traffic_density', 
-            'connection_type_feature', 'asn_hash', 'host_hash', 'ip_hash', 'geoip_hash'
-        ]
-        return {i: f for i, f in enumerate(features)}
-
-    def get_order(self):
-        return self.feature_order
-
-
-
-def fetch_go_source():
-    print("\n[步骤1] Go 源码解析")
-    
-    local_go_path = PROJECT_ROOT / "transform.go"
-    if local_go_path.exists():
-        print(f"发现本地 transform.go 文件: {local_go_path}")
-        return local_go_path.read_text(encoding='utf-8')
-    
-    if GO_SOURCE_CACHE_PATH.exists():
-        if (time.time() - GO_SOURCE_CACHE_PATH.stat().st_mtime) < 86400:
-            print(f"成功加载本地缓存: {GO_SOURCE_CACHE_PATH}")
-            return GO_SOURCE_CACHE_PATH.read_text(encoding='utf-8')
-
-    print(f"正在下载 Go 源文件: {GO_SOURCE_URL}")
+    print(f"☁️ [在线模式] 正在下载: {GO_REMOTE_URL}")
     try:
-        CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        response = requests.get(GO_SOURCE_URL, timeout=10)
-        response.raise_for_status()
-        content = response.text
-        GO_SOURCE_CACHE_PATH.write_text(content, encoding='utf-8')
-        print("下载并缓存成功")
-        return content
+        resp = requests.get(GO_REMOTE_URL, timeout=15)
+        resp.raise_for_status()
+        print("   ✅ 下载成功")
+        return parse_go_content(resp.text)
     except Exception as e:
-        if GO_SOURCE_CACHE_PATH.exists():
-            print(f"下载失败 ({e})，使用旧缓存")
-            return GO_SOURCE_CACHE_PATH.read_text(encoding='utf-8')
-        raise RuntimeError(f"无法获取 Go 源码: {e}")
+        print(f"   ❌ [错误] 下载失败: {e}")
+        raise RuntimeError("无法获取特征定义 (本地缺失且下载失败)")
 
-def load_data(data_dir, days=90):
-    print("\n[步骤2] 数据加载与清洗")
-    print(f"开始从数据目录加载 CSV 文件: {data_dir}")
+def parse_go_content(content):
+    """
+    使用正则从 Go 源码中提取 getDefaultFeatureOrder 映射
+    """
+    pattern = r'func getDefaultFeatureOrder\(\) map\[int\]string\s*\{(.*?)\}'
+    match = re.search(pattern, content, re.DOTALL)
     
+    if not match:
+        raise ValueError("源码中未找到 getDefaultFeatureOrder 函数")
+        
+    body = match.group(1)
+    pairs = re.findall(r'(\d+):\s*"([^"]+)"', body)
+    
+    if not pairs:
+        raise ValueError("函数内未提取到任何特征定义")
+        
+    feature_map = {int(k): v for k, v in pairs}
+    print(f"   ✨ 成功解析出 {len(feature_map)} 个特征")
+    return feature_map
+
+def load_data(data_dir, days=30):
+    print("\n[步骤1] 加载原始数据")
     if not data_dir.exists():
-        raise FileNotFoundError(f"Data directory not found: {data_dir}")
+        raise FileNotFoundError(f"数据目录不存在: {data_dir}")
 
     all_files = glob.glob(str(data_dir / "*.csv"))
-    
-    # 筛选最近 N 天的数据
     cutoff_time = time.time() - (days * 86400)
     recent_files = []
-    
+
     for f in all_files:
         try:
-            mtime = os.path.getmtime(f)
-            # 尝试从文件名解析日期 (smart_20250101_1200.csv)
             fname = os.path.basename(f)
-            date_match = re.search(r'smart_(\d{8}_\d{4})', fname)
-            if date_match:
-                file_time = time.mktime(time.strptime(date_match.group(1), "%Y%m%d_%H%M"))
-                if file_time > cutoff_time:
-                    recent_files.append(f)
-            elif mtime > cutoff_time:
+            match = re.search(r'smart_(\d{8}_\d{4})', fname)
+            if match:
+                file_ts = time.mktime(time.strptime(match.group(1), "%Y%m%d_%H%M"))
+            else:
+                file_ts = os.path.getmtime(f)
+            
+            if file_ts > cutoff_time:
                 recent_files.append(f)
         except:
             pass
 
     if not recent_files:
-        print("警告: 未发现近期数据，将使用所有可用数据...")
+        print("   ⚠️ 未发现近期数据，将加载所有可用数据...")
         recent_files = all_files
-    
+
     if not recent_files:
         raise FileNotFoundError("没有找到任何 CSV 数据文件")
 
-    print(f"--- 选中 {len(recent_files)} 个数据文件 ---")
+    print(f"   📥 选中 {len(recent_files)} 个数据文件")
     
     dfs = []
     for f in recent_files:
         try:
-            # 宽容模式读取
             df = pd.read_csv(f, encoding='utf-8', on_bad_lines='skip')
             
-            # 计算文件年龄（天），用于后续权重衰减
             fname = os.path.basename(f)
-            date_match = re.search(r'smart_(\d{8}_\d{4})', fname)
-            if date_match:
-                file_time = time.mktime(time.strptime(date_match.group(1), "%Y%m%d_%H%M"))
-                age_days = (time.time() - file_time) / 86400
+            match = re.search(r'smart_(\d{8}_\d{4})', fname)
+            if match:
+                file_ts = time.mktime(time.strptime(match.group(1), "%Y%m%d_%H%M"))
             else:
-                age_days = (time.time() - os.path.getmtime(f)) / 86400
+                file_ts = os.path.getmtime(f)
             
-            df['__file_age_days'] = max(0, age_days)
+            df['__age_hours'] = max(0, (time.time() - file_ts) / 3600)
             dfs.append(df)
         except Exception as e:
-            print(f"跳过文件 {os.path.basename(f)}: {e}")
-            continue
-    
-    if not dfs:
-        raise ValueError("无法加载任何有效数据")
-    
+            print(f"   ⚠️ 跳过损坏文件 {os.path.basename(f)}: {e}")
+
     merged_df = pd.concat(dfs, ignore_index=True)
-    print(f"数据合并完成，原始记录数: {len(merged_df)}")
+    merged_df = merged_df.sort_values('__age_hours', ascending=False).reset_index(drop=True)
+    print(f"   📊 数据加载完成，共 {len(merged_df)} 条记录")
     return merged_df
 
 def preprocess_data(df, feature_order):
-    print("\n[步骤3] 特征提取与目标构建 (v4.5 阶梯熔断版)")
+    print("\n[步骤2] 特征工程与目标构建 (深度优化)")
+    
+    if 'maxdownloadrate_kb' not in df.columns:
+         if 'download_mbps' in df.columns:
+            df['maxdownloadrate_kb'] = df['download_mbps'] * 1000
+         else:
+            raise ValueError("数据中缺少速度列 (maxdownloadrate_kb)")
 
-    target_col = 'maxdownloadrate_kb'
-    if target_col not in df.columns:
-        if 'download_mbps' in df.columns:
-            df[target_col] = df['download_mbps'] * 1024 # 转换为 kb
-        else:
-            raise ValueError("严重错误: 数据中缺少 maxdownloadrate_kb 列，无法训练速度模型")
+    raw_speed = df['maxdownloadrate_kb'].fillna(0).clip(lower=0)
+    
+    speed_score = np.log1p(raw_speed)
+    
+    failure_penalty = 0.5 ** df['failure'].fillna(0)
+    
+    latency = df['latency'].fillna(5000)
+    latency_penalty = 1.0 / (1.0 + np.exp((latency - 500) / 100))
 
-    # 填充缺失值
-    df[target_col] = df[target_col].fillna(0)
+    df['target_y'] = speed_score * failure_penalty * latency_penalty
     
-    # --------------------------------------------------------------------------
-    # 核心修改区：策略逻辑 (500M封顶 + 阶梯熔断 + 抖动防御)
-    # --------------------------------------------------------------------------
-    
-    raw_speed = df[target_col]
-    # 1. 宽带封顶：500Mbps (500000 kbps)
-    # 依据你的实际情况，超过这个速度的视为噪声，直接削平
-    raw_speed = raw_speed.clip(upper=500000)
+    print("   🎯 目标构建示例 (前3条):")
+    print(df[['maxdownloadrate_kb', 'failure', 'latency', 'target_y']].head(3).to_string(index=False))
 
-    # 2. 阶梯式失败惩罚
-    # 逻辑：给一次机会 (打3.5折)，第二次直接熔断 (保留1%)。
-    failure_val = df['failure'].fillna(0)
-    cond_list = [
-        failure_val == 0,      # 状态完美
-        failure_val == 1       # 偶发波动 (只断了一次)
-    ]
-    choice_list = [
-        1.0,                   # 不扣分
-        0.35                   # 打3.5折 (保留一定竞争力，防止误杀顶级节点)
-    ]
-    # 默认值 (failure > 1)：连续断连 -> 直接保留 1% 分数 (熔断切换)
-    failure_penalty = np.select(cond_list, choice_list, default=0.01)
-    
-    # 3. 延迟动态惩罚
-    # 逻辑：400ms 以内几乎不扣分，超过 400ms 后分数断崖式下跌
-    latency_val = df['latency'].fillna(5000)
-    latency_penalty = 1.0 / (1.0 + np.exp((latency_val - 600) / 100.0))
-    
-    # 4. 抖动防御 (Jitter)
-    # 逻辑：如果存在抖动数据，超过 50ms 开始扣分，防止选到“心率不齐”的节点
-    if 'jitter' in df.columns:
-        jitter_val = df['jitter'].fillna(0)
-        # 平方级惩罚：抖动越大扣分越狠
-        jitter_penalty = 1.0 / (1.0 + np.square(np.maximum(0, jitter_val - 50) / 100.0))
-    else:
-        jitter_penalty = 1.0
-
-    # 最终训练目标：(物理速度) * (各项惩罚)
-    y = raw_speed * failure_penalty * latency_penalty * jitter_penalty
-    
-    # --------------------------------------------------------------------------
-    
-    # 记录日志看看效果
-    print(f"目标构建示例 (前5条):")
-    for i in range(min(5, len(df))):
-        print(f"  原始速度: {raw_speed.iloc[i]:.0f} kbps, 失败数: {failure_val.iloc[i]}, "
-              f"延迟: {latency_val.iloc[i]:.0f} ms -> 训练目标值: {y.iloc[i]:.2f}")
-
-    # 策略优化：新节点探索机制
-    history_cols = ['history_maxdownloadrate_kb', 'history_download_mb', 'last_used_seconds']
-    # 创建一个随机掩码，25% 的概率为 True
-    exploration_mask = np.random.rand(len(df)) < 0.25
-    
-    for col in history_cols:
-        if col in df.columns:
-            # 对于选中的行，将历史特征抹去 (模拟成新节点)
-            df.loc[exploration_mask, col] = 0.0
-
-    # 2. 特征屏蔽 
-    # 将不需要的特征置为 0，防止噪声干扰
-    for col in IGNORED_FEATURES:
-        if col in df.columns:
-            df[col] = 0.0
-
-    # 3. 特征排序
-    ordered_cols = [feature_order[i] for i in sorted(feature_order.keys())]
-    
-    # 确保所有列都存在
-    for col in ordered_cols:
+    feature_cols = [feature_order[i] for i in sorted(feature_order.keys())]
+    for col in feature_cols:
         if col not in df.columns:
             df[col] = 0.0
-            
-    X = df[ordered_cols].copy()
     
-    # 只保留数值类型
-    X = X.select_dtypes(include=np.number)
-    
-    # 4. 特征标准化
-    print("\n[步骤4] 特征标准化")
+    X = df[feature_cols].copy().fillna(0)
+    y = df['target_y']
+
     scalers = {}
     
-    # 数值型特征
-    std_cols = [c for c in CONTINUOUS_FEATURES if c in X.columns]
+    std_cols = [c for c in STD_FEATURES if c in X.columns]
     if std_cols:
-        scaler_std = StandardScaler()
-        X[std_cols] = scaler_std.fit_transform(X[std_cols])
-        scalers['standard'] = scaler_std
+        s_std = StandardScaler()
+        X[std_cols] = s_std.fit_transform(X[std_cols])
+        scalers['standard'] = s_std
         scalers['std_features'] = std_cols
-        print(f"StandardScaler 应用于 {len(std_cols)} 个特征")
+        print(f"   📏 StandardScaler 应用于 {len(std_cols)} 个特征")
 
-    # 计数型特征
-    rob_cols = [c for c in COUNT_FEATURES if c in X.columns]
+    rob_cols = [c for c in ROB_FEATURES if c in X.columns]
     if rob_cols:
-        scaler_rob = RobustScaler()
-        X[rob_cols] = scaler_rob.fit_transform(X[rob_cols])
-        scalers['robust'] = scaler_rob
+        s_rob = RobustScaler()
+        X[rob_cols] = s_rob.fit_transform(X[rob_cols])
+        scalers['robust'] = s_rob
         scalers['rob_features'] = rob_cols
-        print(f"RobustScaler 应用于 {len(rob_cols)} 个特征")
+        print(f"   🛡️ RobustScaler 应用于 {len(rob_cols)} 个特征")
 
-    # 5. 样本权重 - 优化：时间主导的乘法权重
-    time_decay = np.exp(-0.2 * df['__file_age_days'])
+    w_time = np.exp(-0.01 * df['__age_hours'])
+    w_speed = 1.0 + np.log1p(raw_speed) / 20.0
     
-    # 速度加成：依然保留对高速样本的关注，但必须受制于时间衰减
-    speed_bonus = np.log1p(raw_speed) / 12.0  
+    weights = w_time * w_speed
+
+    return X, y, weights, scalers
+
+def save_model_with_config(model, scalers, feature_order, output_path):
+    print("\n[步骤4] 导出模型")
     
-    # 最终权重 = 时间衰减系数 * (基础分 + 速度加成)
-    sample_weights = time_decay * (1.0 + speed_bonus)
-
-    # UDP 奖赏机制
-    if 'is_udp' in df.columns:
-        udp_bonus = 1.0 + (df['is_udp'].fillna(0) * 0.2)
-        sample_weights = sample_weights * udp_bonus
-
-    return X, y, sample_weights, scalers
-
-def save_model_and_params(model, scalers, feature_order, output_path):
-    print("\n[步骤7] 模型保存与参数注入")
-    
-    # 保存原始 LightGBM 模型
     model.booster_.save_model(str(output_path))
     
-    # 构建 INI 格式的变换参数
-    feature_name_to_idx = {v: k for k, v in feature_order.items()}
-    
-    ini_content = ["", "", "[transforms]"]
-    
-    # 1. Order 区块
-    ini_content.append("[order]")
+    lines = ["", "", "[transforms]", "[order]"]
     for i in sorted(feature_order.keys()):
-        ini_content.append(f"{i}={feature_order[i]}")
-    ini_content.append("[/order]")
+        lines.append(f"{i}={feature_order[i]}")
+    lines.append("[/order]")
+    lines.append("[definitions]")
     
-    # 2. Definitions 区块 (标准化参数)
-    ini_content.append("[definitions]")
-    
-    # StandardScaler 参数写入
     s_std = scalers.get('standard')
     f_std = scalers.get('std_features', [])
     if s_std and f_std:
-        indices = []
-        valid_idx = []
-        for i, name in enumerate(f_std):
-            if name in feature_name_to_idx:
-                indices.append(str(feature_name_to_idx[name]))
-                valid_idx.append(i)
+        name_to_idx = {v:k for k,v in feature_order.items()}
+        indices = [str(name_to_idx[name]) for name in f_std if name in name_to_idx]
         
-        if indices:
-            ini_content.append("std_type=StandardScaler")
-            ini_content.append("std_features=" + ",".join(indices))
-            
-            means = [f"{x:.6f}" for x in s_std.mean_[valid_idx]]
-            ini_content.append("std_mean=" + ",".join(means))
-            
-            scales = [f"{x:.6f}" for x in s_std.scale_[valid_idx]]
-            ini_content.append("std_scale=" + ",".join(scales))
-
-    # RobustScaler 参数写入
+        lines.append("std_type=StandardScaler")
+        lines.append(f"std_features={','.join(indices)}")
+        lines.append(f"std_mean={','.join([f'{v:.6f}' for v in s_std.mean_])}")
+        lines.append(f"std_scale={','.join([f'{v:.6f}' for v in s_std.scale_])}")
+        
     s_rob = scalers.get('robust')
     f_rob = scalers.get('rob_features', [])
     if s_rob and f_rob:
-        indices = []
-        valid_idx = []
-        for i, name in enumerate(f_rob):
-            if name in feature_name_to_idx:
-                indices.append(str(feature_name_to_idx[name]))
-                valid_idx.append(i)
+        lines.append("")
+        name_to_idx = {v:k for k,v in feature_order.items()}
+        indices = [str(name_to_idx[name]) for name in f_rob if name in name_to_idx]
         
-        if indices:
-            ini_content.append("") # 空行分隔
-            ini_content.append("robust_type=RobustScaler")
-            ini_content.append("robust_features=" + ",".join(indices))
-            
-            centers = [f"{x:.6f}" for x in s_rob.center_[valid_idx]]
-            ini_content.append("robust_center=" + ",".join(centers))
-            
-            scales = [f"{x:.6f}" for x in s_rob.scale_[valid_idx]]
-            ini_content.append("robust_scale=" + ",".join(scales))
+        lines.append("robust_type=RobustScaler")
+        lines.append(f"robust_features={','.join(indices)}")
+        lines.append(f"robust_center={','.join([f'{v:.6f}' for v in s_rob.center_])}")
+        lines.append(f"robust_scale={','.join([f'{v:.6f}' for v in s_rob.scale_])}")
 
-    ini_content.append("[/definitions]")
+    lines.append("[/definitions]")
+    lines.append("")
+    lines.append("transform=true")
+    lines.append("[/transforms]")
     
-    # 3. 启用变换
-    ini_content.append("")
-    ini_content.append("transform=true")
-    ini_content.append("[/transforms]")
-    
-    # 追加到文件末尾
     with open(output_path, "ab") as f:
-        f.write("\n".join(ini_content).encode('utf-8'))
-    
-    print(f"模型已保存至: {output_path} (包含完整预处理参数)")
-
-def training_logger(period=100):
-    def _callback(env):
-        if period > 0 and (env.iteration + 1) % period == 0:
-            msg = f"[迭代 {env.iteration + 1:5d}]"
-            for data_name, eval_name, result, *rest in env.evaluation_result_list:
-                msg += f" {data_name}-{eval_name}: {result:.4f}"
-            print(msg)
-    _callback.order = 10
-    return _callback
+        f.write("\n".join(lines).encode('utf-8'))
+        
+    print(f"   💾 模型已保存至: {output_path}")
 
 def main():
-    print_separator("Mihomo 极速权重模型训练器 (v4.5 定制版)")
+    print_separator("Mihomo Smart Trainer (Hybrid Mode)")
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", type=Path, default=DEFAULT_DATA_DIR)
     parser.add_argument("--output", type=Path, default=DEFAULT_MODEL_PATH)
     args = parser.parse_args()
 
-    # 1. 解析特征
     try:
-        go_content = fetch_go_source()
-        parser_obj = GoTransformParser(go_content)
-        feature_order = parser_obj.get_order()
+        feature_order = get_feature_order()
     except Exception as e:
-        print(f"错误: Go 源码解析失败: {e}")
-        sys.exit(1)
+        print(f"❌ 初始化失败: {e}")
+        return
 
-    # 2. 加载数据
     try:
-        # 默认只加载最近 15 天的数据，保证时效性
-        df = load_data(args.data_dir, days=15)
+        df = load_data(args.data_dir)
     except Exception as e:
-        print(f"错误: {e}")
-        sys.exit(1)
+        print(f"❌ {e}")
+        return
 
-    # 3. 预处理 (应用极速策略)
-    try:
-        X, y, weights, scalers = preprocess_data(df, feature_order)
-    except Exception as e:
-        print(f"预处理失败: {e}")
-        sys.exit(1)
-
-    # 4. 划分数据集
-    print("\n[步骤5] 划分训练集与验证集")
-    X_train, X_val, y_train, y_val, w_train, w_val = train_test_split(
-        X, y, weights, test_size=0.15, random_state=42
-    )
-    print(f"训练集: {X_train.shape[0]} 条, 验证集: {X_val.shape[0]} 条")
-
-    # 5. 训练
-    print("\n[步骤6] 模型训练 (LightGBM)")
+    X, y, w, scalers = preprocess_data(df, feature_order)
+    
+    print("\n[步骤3] 模型训练 (Time Series Split)")
+    split_idx = int(len(df) * 0.8)
+    
+    X_train, X_val = X.iloc[:split_idx], X.iloc[split_idx:]
+    y_train, y_val = y.iloc[:split_idx], y.iloc[split_idx:]
+    w_train, w_val = w.iloc[:split_idx], w.iloc[split_idx:]
+    
+    print(f"   🧠 训练集: {len(X_train)} 条 | 🧪 验证集: {len(X_val)} 条")
+    
     model = lgb.LGBMRegressor(**LGBM_PARAMS)
     
     callbacks = [
-        lgb.early_stopping(stopping_rounds=100, verbose=True),
-        training_logger(period=200)
+        lgb.early_stopping(stopping_rounds=50, verbose=True),
+        lgb.log_evaluation(period=100)
     ]
-
+    
     model.fit(
         X_train, y_train,
         sample_weight=w_train,
@@ -488,43 +301,30 @@ def main():
         eval_sample_weight=[w_val],
         callbacks=callbacks
     )
-
-    if model.best_iteration_ < LGBM_PARAMS['n_estimators']:
-         print(f"训练状态: 触发早停。最佳迭代轮数: [{model.best_iteration_}]")
-    else:
-         print(f"训练状态: 未触发早停 (跑满全量)。最佳迭代轮数: [{model.best_iteration_}]")
-
-    # 6. 评估
+    
+    print("\n[评估报告]")
     preds = model.predict(X_val)
     r2 = r2_score(y_val, preds)
     
-    # 简单的线性映射评分 (0.0 - 10.0)
-    # R2=0.5 -> 5.0分, R2=0.8 -> 8.0分
     final_score = max(0, r2 * 10)
-
-    print(f"\n训练结束. 最佳迭代: {model.best_iteration_}")
-    print(f"验证集 R2 得分: {r2:.4f}")
-    print(f"模型最终评分: {final_score:.3f} / 10.0")
+    
+    print(f"   📈 验证集 R2 Score: {r2:.4f}")
+    print(f"   🌟 模型综合评分: {final_score:.1f} / 10.0")
     
     if final_score > 8.0:
-        print("✨ 评级: S级 (极佳) - 极速节点识别精准")
+        print("   🏆 评级: S级 (极佳) - 极速节点识别精准")
     elif final_score > 6.0:
-        print("🟢 评级: A级 (良好) - 模型可用性高")
+        print("   🟢 评级: A级 (良好) - 模型可用性高")
     elif final_score > 4.0:
-        print("🟡 评级: B级 (及格) - 正常水平")
-    elif final_score > 2.0:
-        print("🟠 评级: C级 (一般) - 需积累更多数据")
+        print("   🟡 评级: B级 (及格) - 正常水平")
     else:
-        print("🔴 评级: D级 (不合格) - 噪声过大或数据不足")
+        print("   🟠 评级: C级 (一般) - 需积累更多数据")
 
-    # 7. 保存
-    args.output.parent.mkdir(parents=True, exist_ok=True)
     if args.output.exists():
-        args.output.unlink() # 删除旧文件
-        
-    save_model_and_params(model, scalers, feature_order, args.output)
+        args.output.unlink()
+    save_model_with_config(model, scalers, feature_order, args.output)
     
-    print_separator("完成")
+    print_separator("训练完成")
 
 if __name__ == "__main__":
     main()
