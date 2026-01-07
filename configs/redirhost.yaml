@@ -260,7 +260,6 @@ rules:
   - RULE-SET,私有域名, 直连
   - RULE-SET,直连软件, 直连
   - RULE-SET,网络测试, 网络测试
-  - RULE-SET,广告, REJECT
   - RULE-SET,哔哩哔哩, 哔哩哔哩
   - RULE-SET,游戏下载, 直连
   - RULE-SET,游戏平台, 游戏平台
@@ -342,4 +341,3 @@ rule-providers:
   谷歌ip: { <<: *ip, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/google.mrs"} 
   电报ip: { <<: *ip, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/telegramip.mrs"} 
   游戏平台ip: { <<: *ip, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/gamesip.mrs"} 
-  广告: { <<: *domain_text, url: "https://raw.githubusercontent.com/yingxiaomo/Mihomo-Personal-Rules/refs/heads/main/rules/custom/uaaad.list"} 

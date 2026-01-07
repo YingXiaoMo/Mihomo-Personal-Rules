@@ -34,12 +34,16 @@ jobs:
             name="${filename%.*}"
             output="rules/custom/${name}.mrs"
             
-            if [[ "$filename" == "gta.list" ]]; then
+            # Skip unsupported or raw-only lists
+            if [[ "$filename" == "gta.list" || "$filename" == "proxydns.list" ]]; then
+              echo "Skipping $filename (No compilation needed)"
               continue
             fi
             
             type="domain"
             [[ "$filename" == *"ip"* ]] && type="ipcidr"
+            
+            echo "Compiling $filename to $output (Type: $type)..."
             
             temp_file="rules/custom/${name}.temp.list"
             if [[ "$type" == "domain" ]]; then
