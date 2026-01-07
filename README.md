@@ -2,6 +2,12 @@
 
 一个简单的个人规则配置，包括各种配置文件、规则列表、图标资源，以及一个Smart训练脚本。  
 全部仅自用，有需要的可以自行修改。
+  
+
+
+规则来源：  
+https://github.com/DustinWin/ruleset_geodata  
+https://github.com/MetaCubeX/meta-rules-dat/tree/meta
 
 ## 目录结构
 
