@@ -1,158 +1,126 @@
 ## 仅自用
 
+#---------------------------------------------------#
+#                   CDN & 云服务
+#---------------------------------------------------#
++.ghcr.io
++.zeabur.com
++.azureedge.net
++.msecnd.net
++.blob.core.windows.net
++.vo.msecnd.net
++.cloudapp.net
++.cloudapp.azure.com
++.akamaihd.net
 
 
-# 常用
-DOMAIN-KEYWORD,razer
-DOMAIN-KEYWORD,epic
-DOMAIN-KEYWORD,flyme
-DOMAIN-KEYWORD,nmliao
-DOMAIN-KEYWORD,outlook
+#---------------------------------------------------#
+#                       游戏
+#---------------------------------------------------#
+# Epic Games
++.epicgames.com
+# Razer
++.razer.com
+# Rockstar Games
++.rockstargames.com
+# Humble Bundle
++.humblebundle.com
+# Final Fantasy XIV
++.ffxiv.com
++.ffxiv.cn
+# Riot Games
++.pvp.net
++.riotcdn.net
++.anticheatexpert.com
 
 
-
-DOMAIN-SUFFIX,amap.com
-DOMAIN-SUFFIX,qweatherapi.com
-DOMAIN-SUFFIX,ipapi.co
-DOMAIN-SUFFIX,ipwho.org
-DOMAIN-SUFFIX,ipwho.is
-DOMAIN-SUFFIX,freeipapi.com
-DOMAIN-SUFFIX,geoapi.info
-DOMAIN-SUFFIX,ip-api.com
-
-##
-DOMAIN-SUFFIX,170011.xyz
-DOMAIN-SUFFIX,396638.xyz
-DOMAIN-SUFFIX,ovoxo.cc
-DOMAIN-SUFFIX,xiaomo.eu
-DOMAIN-SUFFIX,mmoyo.cn
-DOMAIN-SUFFIX,mmovo.com
+#---------------------------------------------------#
+#                 开发与技术工具
+#---------------------------------------------------#
++.dutils.com
++.ghfast.top
++.greasyfork.org
++.istoreos.com
++.koolcenter.com
++.linkease.com
++.lsposed.org
++.nn.ci
 
 
-
-# 乱七八糟
-DOMAIN-SUFFIX,ghcr.io
-DOMAIN-SUFFIX,zeabur.com
-DOMAIN-SUFFIX,bujidao.org
-
-# R星
-DOMAIN-KEYWORD,rockstargames
-
-DOMAIN-SUFFIX,ghfast.top
-DOMAIN-SUFFIX,humblebundle.com
-DOMAIN-SUFFIX,epicgames.com
-
-DOMAIN-SUFFIX,office365.com
-DOMAIN-SUFFIX,greasyfork.org
-DOMAIN-SUFFIX,123624.com
-DOMAIN-SUFFIX,klingai.com
-DOMAIN-SUFFIX,xingliu.art
-DOMAIN-SUFFIX,stepfun.com
-DOMAIN-SUFFIX,yuewen.cn
-DOMAIN-SUFFIX,link.cc
-DOMAIN-SUFFIX,ffxiv.com
-DOMAIN-SUFFIX,ffxiv.cn
-DOMAIN-SUFFIX,123yx.com
-DOMAIN-SUFFIX,7moor-fs1.com
-DOMAIN-SUFFIX,alipan.com
-DOMAIN-SUFFIX,alist.nn.ci
-DOMAIN-SUFFIX,api-p1.yksdks.com
-DOMAIN-SUFFIX,api.byyang.top
-DOMAIN-SUFFIX,api.tongjiniao.com
-DOMAIN-SUFFIX,api.xhofe.top
-DOMAIN-SUFFIX,byyang.top
-DOMAIN-SUFFIX,c-ssl.duitang.com
-DOMAIN-SUFFIX,c1029.lanosso.com
-DOMAIN-SUFFIX,cjjd17.com
-DOMAIN-SUFFIX,diemoe.net
-DOMAIN-SUFFIX,duitang.com
-DOMAIN-SUFFIX,dutils.com
-DOMAIN-SUFFIX,ff14.huijiwiki.com
-DOMAIN-SUFFIX,files.likesrt.com
-DOMAIN-SUFFIX,fs-im-kefu.7moor-fs1.com
-DOMAIN-SUFFIX,github.moeyy.xyz
-DOMAIN-SUFFIX,greasyfork.org
-DOMAIN-SUFFIX,huijiwiki.com
-DOMAIN-SUFFIX,istoreos.com
-DOMAIN-SUFFIX,koolcenter.com
-DOMAIN-SUFFIX,lanosso.com
-DOMAIN-SUFFIX,legado.cc
-DOMAIN-SUFFIX,likesrt.com
-DOMAIN-SUFFIX,linkease.com
-DOMAIN-SUFFIX,lsposed.org
-DOMAIN-SUFFIX,lz.legado.cc
-DOMAIN-SUFFIX,mgz6.cc
-DOMAIN-SUFFIX,mgz6.com
-DOMAIN-SUFFIX,miaogongzi.net
-DOMAIN-SUFFIX,moeyy.xyz
-DOMAIN-SUFFIX,netease.com
-DOMAIN-SUFFIX,nn.ci
-DOMAIN-SUFFIX,policy.flyme.com
-DOMAIN-SUFFIX,qu.sdo.com
-DOMAIN-SUFFIX,tongjiniao.com
-DOMAIN-SUFFIX,turingpic.com
-DOMAIN-SUFFIX,vip.123yx.com
-DOMAIN-SUFFIX,vip.cjjd17.com
-DOMAIN-SUFFIX,xhofe.top
-DOMAIN-SUFFIX,yd.mgz6.cc
-DOMAIN-SUFFIX,yd.mgz6.com
-DOMAIN-SUFFIX,yksdks.com
-DOMAIN-SUFFIX,yuedu.miaogongzi.net
-DOMAIN-SUFFIX,fnnas.com
-DOMAIN-SUFFIX,hnczy.icu
-DOMAIN-SUFFIX,xn--9kq49fww9d.com
-DOMAIN-SUFFIX,xn--gvwa.xyz
-DOMAIN-SUFFIX,asus.com
-DOMAIN-SUFFIX,asus.com.cn
-DOMAIN-SUFFIX,pvp.net
+#---------------------------------------------------#
+#                  IP与地理位置服务
+#---------------------------------------------------#
++.ip-api.com
++.ipapi.co
++.ipwho.is
++.ipwho.org
++.freeipapi.com
++.geoapi.info
 
 
+#---------------------------------------------------#
+#                  硬件与其他服务
+#---------------------------------------------------#
+# ASUS
++.asus.com
+# Meizu
++.flyme.com
 
 
-DOMAIN-SUFFIX,microsoft.com
-DOMAIN-SUFFIX,microsoftonline.com
-DOMAIN-SUFFIX,windows.net
-DOMAIN-SUFFIX,windows.com
-DOMAIN-SUFFIX,live.com
-DOMAIN-SUFFIX,msftncsi.com
-DOMAIN-SUFFIX,msftconnecttest.com
-DOMAIN-SUFFIX,msauth.cn
-DOMAIN-SUFFIX,msftauth.cn
-DOMAIN-SUFFIX,msn.cn
-DOMAIN-SUFFIX,skype.com
-DOMAIN,time.windows.com
-
-
-DOMAIN-SUFFIX,onmschina.cn
-DOMAIN-SUFFIX,sharepoint.cn
-DOMAIN-SUFFIX,office.com
-DOMAIN-SUFFIX,officeapps.live.com
-DOMAIN-SUFFIX,sharepointonline.com
-DOMAIN-SUFFIX,officecdn.microsoft.com
-DOMAIN-SUFFIX,msocdn.com
-
-
-DOMAIN-SUFFIX,windowsupdate.com
-DOMAIN-SUFFIX,update.microsoft.com
-DOMAIN-SUFFIX,download.microsoft.com
-DOMAIN-SUFFIX,mp.microsoft.com
-DOMAIN-SUFFIX,data.microsoft.com
-DOMAIN-SUFFIX,telemetry.microsoft.com
-
-
-DOMAIN-SUFFIX,azureedge.net
-DOMAIN-SUFFIX,msecnd.net
-DOMAIN-SUFFIX,blob.core.windows.net
-DOMAIN-SUFFIX,vo.msecnd.net
-DOMAIN-SUFFIX,azure.com
-DOMAIN-SUFFIX,cloudapp.net
-DOMAIN-SUFFIX,cloudapp.azure.com
-DOMAIN-SUFFIX,akamaihd.net
-
-
-DOMAIN-SUFFIX,anticheatexpert.com
-
-
-DOMAIN-SUFFIX,riotcdn.net
+#---------------------------------------------------#
+#                   国内服务及网站
+#---------------------------------------------------#
++.nmliao.com
+# 高德地图
++.amap.com
+# 和风天气
++.qweatherapi.com
+# 阿里云盘
++.alipan.com
+# 网易
++.netease.com
+# 阅文集团
++.yuewen.cn
+# 盛趣游戏
++.qu.sdo.com
+# 堆糖
++.duitang.com
+# 灰机wiki
++.huijiwiki.com
+# Kling AI
++.klingai.com
+# 阅读APP
++.legado.cc
+# 其他
++.170011.xyz
++.396638.xyz
++.ovoxo.cc
++.xiaomo.eu
++.mmoyo.cn
++.mmovo.com
++.bujidao.org
++.123624.com
++.xingliu.art
++.stepfun.com
++.link.cc
++.123yx.com
++.7moor-fs1.com
++.api-p1.yksdks.com
++.api.tongjiniao.com
++.api.xhofe.top
++.byyang.top
++.lanosso.com
++.likesrt.com
++.mgz6.cc
++.mgz6.com
++.miaogongzi.net
++.moeyy.xyz
++.tongjiniao.com
++.turingpic.com
++.yksdks.com
++.fnnas.com
++.hnczy.icu
++.xn--9kq49fww9d.com
++.xn--gvwa.xyz
 
 

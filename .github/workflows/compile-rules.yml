@@ -1,0 +1,59 @@
+﻿name: Compile Rules to MRS
+
+on:
+  push:
+    paths:
+      - 'rules/custom/*.list'
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Mihomo
+        run: |
+          VERSION="v1.19.18"
+          URL="https://github.com/MetaCubeX/mihomo/releases/download/${VERSION}/mihomo-linux-amd64-${VERSION}.gz"
+          wget -O mihomo.gz "$URL"
+          gzip -d mihomo.gz
+          chmod +x mihomo
+
+      - name: Compile Rules
+        run: |
+          mkdir -p rules/custom
+          for file in rules/custom/*.list; do
+            filename=$(basename "$file")
+            name="${filename%.*}"
+            output="rules/custom/${name}.mrs"
+            
+            if [[ "$filename" == "gta.list" ]]; then
+              continue
+            fi
+            
+            type="domain"
+            [[ "$filename" == *"ip"* ]] && type="ipcidr"
+            
+            temp_file="rules/custom/${name}.temp.list"
+            if [[ "$type" == "domain" ]]; then
+               grep -v '^#' "$file" | grep -v '^\s*$' | sed -E 's/^[\\+\\.]+//g' > "$temp_file"
+            else
+               grep -v '^#' "$file" | grep -v '^\s*$' > "$temp_file"
+            fi
+            
+            ./mihomo convert-ruleset "$type" text "$temp_file" "$output"
+            rm "$temp_file"
+          done
+
+      - name: Commit and Push
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: auto compile rules to .mrs binary"
+          file_pattern: 'rules/custom/*.mrs'

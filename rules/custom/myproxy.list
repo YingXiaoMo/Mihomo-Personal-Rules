@@ -1,19 +1,15 @@
 ## 仅自用
 
-
-
-DOMAIN-SUFFIX,azureedge.net
-DOMAIN-SUFFIX,uaa.com
-DOMAIN-SUFFIX,hanime1.me
++.azureedge.net
++.uaa.com
++.hanime1.me
 
 # vercel
-DOMAIN-SUFFIX,vercel.com
++.vercel.com
 
+hub.docker.com
+services.googleapis.cn
+xn--ngstr-lra8j.com
 
-DOMAIN,hub.docker.com
-DOMAIN,services.googleapis.cn
-DOMAIN,xn--ngstr-lra8j.com
-
-
-DOMAIN-SUFFIX,spaceship.com
-DOMAIN-SUFFIX,spaceship-cdn.com
++.spaceship.com
++.spaceship-cdn.com

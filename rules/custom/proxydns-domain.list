@@ -1,0 +1,26 @@
+# ==============================
+# Cloudflare (CF)
+# ==============================
+# 标准 DoH 域名
++.cloudflare-dns.com
++.one.one.one.one
+
+# ==============================
+# Google Public DNS
+# ==============================
+# 标准 DoH 域名
++.dns.google
++.dns.google.com
+
+# ==============================
+# 其他知名国外 DNS 
+# ==============================
+# Quad9 
++.dns.quad9.net
+
+# Cisco OpenDNS
++.doh.opendns.com
++.opendns.com
+
+# AdGuard DNS 
++.dns.adguard-dns.com
