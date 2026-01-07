@@ -3,7 +3,7 @@
 on:
   push:
     paths:
-      - 'rules/custom/*.list'
+      - 'rules/*.list'
     branches:
       - main
   workflow_dispatch:
@@ -28,11 +28,11 @@ jobs:
 
       - name: Compile Rules
         run: |
-          mkdir -p rules/custom
-          for file in rules/custom/*.list; do
+          mkdir -p rules
+          for file in rules/*.list; do
             filename=$(basename "$file")
             name="${filename%.*}"
-            output="rules/custom/${name}.mrs"
+            output="rules/${name}.mrs"
             
             # Skip unsupported or raw-only lists
             if [[ "$filename" == "gta.list" || "$filename" == "proxydns.list" ]]; then
@@ -45,7 +45,7 @@ jobs:
             
             echo "Compiling $filename to $output (Type: $type)..."
             
-            temp_file="rules/custom/${name}.temp.list"
+            temp_file="rules/${name}.temp.list"
             if [[ "$type" == "domain" ]]; then
                grep -v '^#' "$file" | grep -v '^\s*$' | sed -E 's/^[\\+\\.]+//g' > "$temp_file"
             else
@@ -60,4 +60,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: auto compile rules to .mrs binary"
-          file_pattern: 'rules/custom/*.mrs'
+          file_pattern: 'rules/*.mrs'
