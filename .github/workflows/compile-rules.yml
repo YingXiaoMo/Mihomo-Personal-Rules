@@ -18,10 +18,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install Mihomo
+      - name: Install Mihomo (Auto Latest Standard)
         run: |
-          VERSION="v1.19.18"
+          VERSION=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+          
+          echo "Detected latest version: ${VERSION}"
+          
           URL="https://github.com/MetaCubeX/mihomo/releases/download/${VERSION}/mihomo-linux-amd64-${VERSION}.gz"
+          
+          echo "Downloading from: $URL"
+          
           wget -O mihomo.gz "$URL"
           gzip -d mihomo.gz
           chmod +x mihomo
@@ -46,11 +52,8 @@ jobs:
             echo "Compiling $filename to $output (Type: $type)..."
             
             temp_file="rules/${name}.temp.list"
-            if [[ "$type" == "domain" ]]; then
-               grep -v '^#' "$file" | grep -v '^\s*$' | sed -E 's/^[\\+\\.]+//g' > "$temp_file"
-            else
-               grep -v '^#' "$file" | grep -v '^\s*$' > "$temp_file"
-            fi
+            
+            grep -v '^#' "$file" | grep -v '^\s*$' | tr -d '\r' > "$temp_file"
             
             ./mihomo convert-ruleset "$type" text "$temp_file" "$output"
             rm "$temp_file"
