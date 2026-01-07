@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'rules/*.list'
+      - '.github/workflows/compile-rules.yml'
     branches:
       - main
   workflow_dispatch:
