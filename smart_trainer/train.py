@@ -15,10 +15,10 @@ import pandas as pd
 from sklearn.metrics import r2_score
 from sklearn.preprocessing import RobustScaler, StandardScaler
 
+
 TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "") 
 TG_CHAT_ID = os.environ.get("TG_CHAT_ID", "")
 LOG_FILENAME = "training.log"
-
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
@@ -27,13 +27,12 @@ DEFAULT_MODEL_PATH = PROJECT_ROOT / "Model.bin"
 GO_LOCAL_PATH = SCRIPT_DIR / "transform.go"
 GO_REMOTE_URL = "https://raw.githubusercontent.com/vernesong/mihomo/Alpha/component/smart/lightgbm/transform.go"
 
-
 class TeeLogger(object):
     def __init__(self, filename=LOG_FILENAME):
         self.terminal = sys.stdout
         self.filename = filename
         with open(self.filename, "w", encoding='utf-8') as f:
-            f.write(f"--- Mihomo Training Log Start: {time.strftime('%Y-%m-%d %H:%M:%S')} ---\n")
+            f.write(f"--- 训练开始: {time.strftime('%Y-%m-%d %H:%M:%S')} ---\n")
         self.log = open(self.filename, "a", encoding='utf-8')
 
     def write(self, message):
@@ -83,7 +82,6 @@ def print_separator(title=None):
         print("=" * 60)
 
 def send_telegram_msg(text):
-    """基础发送"""
     if not TG_BOT_TOKEN or not TG_CHAT_ID: return
     url = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
     data = {
@@ -98,7 +96,6 @@ def send_telegram_msg(text):
         sys.stdout.terminal.write(f"⚠️ TG 发送失败: {e}\n")
 
 def send_telegram_logs(header_msg):
-    """发送日志"""
     if not TG_BOT_TOKEN or not TG_CHAT_ID: return
 
     send_telegram_msg(header_msg)
@@ -326,7 +323,8 @@ def save_model_with_config(model, scalers, feature_order, output_path):
     print(f"💾 模型已保存至: {output_path}")
 
 def run_training():
-    print_separator("Mihomo Smart Trainer (Direct View Mode)")
+
+    print_separator("Smart 训练器启动")
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", type=Path, default=DEFAULT_DATA_DIR)
@@ -345,12 +343,12 @@ def run_training():
     w_train, w_val = w.iloc[:split_idx], w.iloc[split_idx:]
     
     print(f"🧠 训练集: {len(X_train)} 条 | 🧪 验证集: {len(X_val)} 条")
-    print(f"🛑 早停机制已启用: 如果验证集分数在 50 轮内没有提升，将自动停止训练。")
+    print(f"🛑 早停机制已启用: 如果验证集分数在 100 轮内没有提升，将自动停止训练。")
     
     model = lgb.LGBMRegressor(**LGBM_PARAMS)
     
     callbacks = [
-        lgb.early_stopping(stopping_rounds=50, verbose=False),
+        lgb.early_stopping(stopping_rounds=100, verbose=False),
         lgb.log_evaluation(period=100)
     ]
     
