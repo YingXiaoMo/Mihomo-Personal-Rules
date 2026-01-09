@@ -193,6 +193,8 @@ RR: &RR { type: load-balance, strategy: round-robin, include-all: true, <<: *Che
 # 适用于需要保持客户端连接一致性（例如，防止频繁切换 IP 导致登录失效）的场景
 CH: &CH { type: load-balance, strategy: consistent-hashing, include-all: true, <<: *Check,hidden: true, exclude-type: direct }
 
+# 锚点里面的 hidden: true 表示隐藏这个代理组，不会在代理列表中显示，但仍然可以在规则中使用它们。适合用于不需要手动更改的分组，比如自动选择、负载均衡等。
+
 
 # 代理组配置
 proxy-groups:

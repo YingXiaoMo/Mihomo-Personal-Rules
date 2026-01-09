@@ -4,8 +4,10 @@ import re
 import sys
 import glob
 import time
+import traceback
 from pathlib import Path
 import requests
+import io
 
 import lightgbm as lgb
 import numpy as np
@@ -13,12 +15,38 @@ import pandas as pd
 from sklearn.metrics import r2_score
 from sklearn.preprocessing import RobustScaler, StandardScaler
 
+TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "") 
+TG_CHAT_ID = os.environ.get("TG_CHAT_ID", "")
+LOG_FILENAME = "training.log"
+
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 DEFAULT_DATA_DIR = PROJECT_ROOT
 DEFAULT_MODEL_PATH = PROJECT_ROOT / "Model.bin"
 GO_LOCAL_PATH = SCRIPT_DIR / "transform.go"
 GO_REMOTE_URL = "https://raw.githubusercontent.com/vernesong/mihomo/Alpha/component/smart/lightgbm/transform.go"
+
+
+class TeeLogger(object):
+    def __init__(self, filename=LOG_FILENAME):
+        self.terminal = sys.stdout
+        self.filename = filename
+        with open(self.filename, "w", encoding='utf-8') as f:
+            f.write(f"--- Mihomo Training Log Start: {time.strftime('%Y-%m-%d %H:%M:%S')} ---\n")
+        self.log = open(self.filename, "a", encoding='utf-8')
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+        self.log.flush()
+
+    def flush(self):
+        self.terminal.flush()
+        self.log.flush()
+
+sys.stdout = TeeLogger()
+sys.stderr = sys.stdout
 
 STD_FEATURES = [
     'connect_time', 'latency', 'download_mb', 'history_download_mb',
@@ -34,9 +62,9 @@ LGBM_PARAMS = {
     'objective': 'regression',
     'metric': 'rmse',
     'boosting_type': 'gbdt',
-    'n_estimators': 10000,
-    'learning_rate': 0.05,
-    'num_leaves': 31,
+    'n_estimators': 10000,       
+    'learning_rate': 0.05,       
+    'num_leaves': 31,            
     'max_depth': -1,
     'min_child_samples': 20,
     'subsample': 0.8,
@@ -53,6 +81,48 @@ def print_separator(title=None):
     if title:
         print(f"{title}")
         print("=" * 60)
+
+def send_telegram_msg(text):
+    """基础发送"""
+    if not TG_BOT_TOKEN or not TG_CHAT_ID: return
+    url = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
+    data = {
+        "chat_id": TG_CHAT_ID,
+        "text": text,
+        "parse_mode": "HTML",
+        "disable_web_page_preview": True
+    }
+    try:
+        requests.post(url, json=data, timeout=10)
+    except Exception as e:
+        sys.stdout.terminal.write(f"⚠️ TG 发送失败: {e}\n")
+
+def send_telegram_logs(header_msg):
+    """发送日志"""
+    if not TG_BOT_TOKEN or not TG_CHAT_ID: return
+
+    send_telegram_msg(header_msg)
+
+    try:
+        with open(LOG_FILENAME, "r", encoding='utf-8') as f:
+            content = f.read()
+    except:
+        content = "无法读取日志文件"
+
+    chunk_size = 3500
+    total_len = len(content)
+    
+    if total_len == 0:
+        send_telegram_msg("<i>(日志为空)</i>")
+        return
+
+    for i in range(0, total_len, chunk_size):
+        chunk = content[i : i + chunk_size]
+        formatted_msg = f"<pre>{chunk}</pre>"
+        send_telegram_msg(formatted_msg)
+        time.sleep(1)
+
+    sys.stdout.terminal.write("📨 Telegram 日志已推送\n")
 
 def get_feature_order():
     if GO_LOCAL_PATH.exists():
@@ -78,16 +148,10 @@ def get_feature_order():
 def parse_go_content(content):
     pattern = r'func getDefaultFeatureOrder\(\) map\[int\]string\s*\{(.*?)\}'
     match = re.search(pattern, content, re.DOTALL)
-    
-    if not match:
-        raise ValueError("源码中未找到 getDefaultFeatureOrder 函数")
-        
+    if not match: raise ValueError("源码中未找到 getDefaultFeatureOrder 函数")
     body = match.group(1)
     pairs = re.findall(r'(\d+):\s*"([^"]+)"', body)
-    
-    if not pairs:
-        raise ValueError("函数内未提取到任何特征定义")
-        
+    if not pairs: raise ValueError("函数内未提取到任何特征定义")
     feature_map = {int(k): v for k, v in pairs}
     print(f"✨ 成功解析出 {len(feature_map)} 个特征")
     return feature_map
@@ -109,7 +173,6 @@ def load_data(data_dir, days=30):
                 file_ts = time.mktime(time.strptime(match.group(1), "%Y%m%d_%H%M"))
             else:
                 file_ts = os.path.getmtime(f)
-            
             if file_ts > cutoff_time:
                 recent_files.append(f)
         except:
@@ -126,23 +189,40 @@ def load_data(data_dir, days=30):
     
     dfs = []
     for f in recent_files:
+        fname = os.path.basename(f)
         try:
             df = pd.read_csv(f, encoding='utf-8', on_bad_lines='skip')
-            fname = os.path.basename(f)
+        except UnicodeDecodeError:
+            print(f"🔧 正在修复损坏文件: {fname} ...", end=" ")
+            try:
+                with open(f, 'rb') as raw_file:
+                    content_bytes = raw_file.read()
+                content_str = content_bytes.decode('utf-8', errors='replace')
+                df = pd.read_csv(io.StringIO(content_str), on_bad_lines='skip')
+                print(f"✅ 成功抢救 {len(df)} 条数据")
+            except Exception as e:
+                print(f"❌ 修复失败: {str(e)}")
+                continue
+        except pd.errors.EmptyDataError:
+            print(f"⚠️ 跳过空文件: {fname}")
+            continue
+        except Exception as e:
+            print(f"⚠️ 跳过文件 {fname}: {str(e)}")
+            continue
+
+        try:
             match = re.search(r'smart_(\d{8}_\d{4})', fname)
             if match:
                 file_ts = time.mktime(time.strptime(match.group(1), "%Y%m%d_%H%M"))
             else:
                 file_ts = os.path.getmtime(f)
-            
             df['__age_hours'] = max(0, (time.time() - file_ts) / 3600)
             dfs.append(df)
-        except UnicodeDecodeError:
-            print(f"⚠️ 跳过损坏文件 {os.path.basename(f)}: 文件内容不完整(乱码)")
-        except pd.errors.EmptyDataError:
-            print(f"⚠️ 跳过空文件 {os.path.basename(f)}")
-        except Exception as e:
-            print(f"⚠️ 跳过文件 {os.path.basename(f)}: {str(e)}")
+        except:
+            pass
+
+    if not dfs:
+        raise ValueError("没有可用的数据被加载")
 
     merged_df = pd.concat(dfs, ignore_index=True)
     merged_df = merged_df.sort_values('__age_hours', ascending=False).reset_index(drop=True)
@@ -245,25 +325,16 @@ def save_model_with_config(model, scalers, feature_order, output_path):
         
     print(f"💾 模型已保存至: {output_path}")
 
-def main():
-    print_separator("Mihomo Smart Trainer (Pure Mode)")
+def run_training():
+    print_separator("Mihomo Smart Trainer (Direct View Mode)")
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", type=Path, default=DEFAULT_DATA_DIR)
     parser.add_argument("--output", type=Path, default=DEFAULT_MODEL_PATH)
     args = parser.parse_args()
 
-    try:
-        feature_order = get_feature_order()
-    except Exception as e:
-        print(f"❌ 初始化失败: {e}")
-        return
-
-    try:
-        df = load_data(args.data_dir)
-    except Exception as e:
-        print(f"❌ {e}")
-        return
+    feature_order = get_feature_order()
+    df = load_data(args.data_dir)
 
     X, y, w, scalers = preprocess_data(df, feature_order)
     
@@ -318,6 +389,27 @@ def main():
     save_model_with_config(model, scalers, feature_order, args.output)
     
     print_separator("训练完成")
+    return final_score, len(df), model.best_iteration_
 
 if __name__ == "__main__":
-    main()
+    try:
+        score, count, rounds = run_training()
+        
+        header = (
+            f"✅ <b>Mihomo 训练成功</b>\n"
+            f"📊 数据量: <code>{count}</code> 条\n"
+            f"🔄 训练轮数: <code>{rounds}</code>\n"
+            f"🎯 最终评分: <code>{score:.2f} / 10.0</code> (R2)"
+        )
+        send_telegram_logs(header)
+        
+    except Exception as e:
+        error_trace = traceback.format_exc()
+        print(f"\n❌ 发生严重错误:\n{error_trace}")
+        
+        header = (
+            f"❌ <b>Mihomo 训练失败</b>\n"
+            f"⚠️ 错误原因: <code>{str(e)}</code>"
+        )
+        send_telegram_logs(header)
+        sys.exit(1)

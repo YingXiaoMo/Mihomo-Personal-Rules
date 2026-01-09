@@ -64,9 +64,12 @@ jobs:
 
       - name: Run training script
         id: training
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: |
           set -o pipefail
-          python smart_trainer/train_smart.py 2>&1 | tee training_log.txt
+          python smart_trainer/train.py
 
       - name: Upload model artifact
         if: success() 
@@ -90,92 +93,8 @@ jobs:
             --target main \
             --latest
 
-      - name: Send Notification
-        if: always() 
-        env:
-          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
-          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-          JOB_STATUS: ${{ job.status }}
-          GITHUB_RUN_ID: ${{ github.run_id }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_SERVER_URL: ${{ github.server_url }}
-          LATEST_TAG: ${{ env.LATEST_TAG }}
-          LOG_FILE: "training_log.txt"
+      - name: Cleanup
+        if: always()
         run: |
-          python -c '
-          import os
-          import urllib.request
-          import urllib.parse
-          import sys
-          import shutil
-          import glob
-
-          token = os.environ.get("TG_BOT_TOKEN")
-          chat_id = os.environ.get("TG_CHAT_ID")
-          status = os.environ.get("JOB_STATUS")
-          run_id = os.environ.get("GITHUB_RUN_ID")
-          repo = os.environ.get("GITHUB_REPOSITORY")
-          server_url = os.environ.get("GITHUB_SERVER_URL")
-          tag = os.environ.get("LATEST_TAG")
-          log_file = os.environ.get("LOG_FILE")
-
-          if not token or not chat_id:
-              print("::warning::Telegram Token or Chat ID is missing. Skipping notification.")
-              sys.exit(0)
-
-          def send_msg(text):
-              url = f"https://api.telegram.org/bot{token}/sendMessage"
-              payload = {
-                  "chat_id": chat_id,
-                  "text": text,
-                  "parse_mode": "HTML",
-                  "disable_web_page_preview": "true"
-              }
-              data = urllib.parse.urlencode(payload).encode("utf-8")
-              req = urllib.request.Request(url, data=data)
-              try:
-                  with urllib.request.urlopen(req) as response:
-                      print(f"Message sent: {response.status}")
-              except Exception as e:
-                  print(f"Failed to send message: {e}")
-
-          if status == "success":
-              header = f"""<b>🎉 模型发布成功！</b>
-              🔗 GitHub Release 已更新。
-              <a href="{server_url}/{repo}/releases/tag/{tag}">查看 Release</a>
-              """
-          else:
-              header = f"""<b>🚨 模型部署/训练失败！</b>
-              ❌ 任务运行过程中发生错误。
-              <a href="{server_url}/{repo}/actions/runs/{run_id}">查看详细运行记录</a>
-              """
-          
-          send_msg(header)
-
-          if os.path.exists(log_file):
-              try:
-                  with open(log_file, "r", encoding="utf-8", errors="ignore") as f:
-                      content = f.read()
-                  
-                  if not content.strip():
-                      send_msg("<i>(日志文件为空)</i>")
-                  else:
-                      chunk_size = 3000
-                      if len(content) > chunk_size:
-                          for i in range(0, len(content), chunk_size):
-                              chunk = content[i:i+chunk_size]
-                              send_msg(f"<pre>{chunk}</pre>")
-                      else:
-                          send_msg(f"<pre>{content}</pre>")
-              except Exception as e:
-                  send_msg(f"读取日志文件出错: {str(e)}")
-          else:
-              send_msg(f"⚠️ 找不到日志文件: {log_file} (可能在训练开始前就崩溃了)")
-
-          if os.path.exists("rclone.conf"):
-              os.remove("rclone.conf")
-          
-          # Clean up CSV files
-          for csv_file in glob.glob("*.csv"):
-              os.remove(csv_file)
-          '
+          if [ -f "rclone.conf" ]; then rm rclone.conf; fi
+          rm -f *.csv training.log
