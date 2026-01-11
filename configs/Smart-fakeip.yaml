@@ -22,7 +22,7 @@ proxy-providers:
     override:
 #      additional-prefix: ""                                       # 自定义节点名字前缀                  
 #      additional-suffix: ""                                       # 自定义节点名字后缀                 
-      skip-cert-verify: true                                       # 是否跳过节点的证书验证，默认为 false
+#      skip-cert-verify: true                                       # 是否跳过节点的证书验证，默认为 false
       udp: true                                                    # 是否启用 UDP 转发，默认为 true                   
 #    filter: "(?i)新加坡|坡|狮城|SG|Singapore"                      # 订阅内节点的过滤规则，支持正则表达式  
 
@@ -94,7 +94,7 @@ tun:
   auto-route: true                                                  # 自动路由
   auto-redirect: true                                               # 自动重定向
   auto-detect-interface: true                                       # 自动接口选择
-  endpoint-independent-nat: true                                    # 启用独立于端点的 NAT
+  endpoint-independent-nat: true                                    # 启用独立于端点的 NAT 用于提高NAT等级，可能对游戏联机有帮助
   udp-timeout: 300s                                                 # UDP NAT 过期时间，以秒为单位
 
 
@@ -142,12 +142,12 @@ dns:
 # 我使用下面的数据库匹配所以把这里注释掉了，需要的可以打开这个，把下面的nameserver-policy注释掉
 #  direct-nameserver:    
 #   - https://223.5.5.5/dns-query
-#   - https://223.6.6.6/dns-query
+#   - https://119.29.29.29/dns-query
 
 # 解析代理节点时使用的DNS，最好设置为国内DNS，否则在代理的第一步就可能因为连接不上国外DNS而解析不出代理节点的IP，最终倒在起点
   proxy-server-nameserver:
     - https://223.5.5.5/dns-query
-    - https://223.6.6.6/dns-query
+    - https://119.29.29.29/dns-query
 
 
 # 指定域名查询的解析服务器，可使用 geosite, 优先于 nameserver/fallback 查询
@@ -208,6 +208,7 @@ proxy-groups:
   - { name: 游戏平台, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Steam.png" }
   - { name: GitHub, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/GitHub.png" }
   - { name: 电报消息, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Telegram.png" }
+  - { name: Cloudflare, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Cloudflare.png" }
   - { name: AI服务, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/AI.png" }
   - { name: ChatGPT, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/ChatGPT.png" }
   - { name: Claude, <<: *all, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Claude.png" }
@@ -313,6 +314,7 @@ rules:
   - RULE-SET,苹果cn, 直连
   - RULE-SET,苹果服务, 苹果服务
   - RULE-SET,电报域名, 电报消息
+  - RULE-SET,Cloudflare, Cloudflare
   - RULE-SET,GitHub, GitHub
   - RULE-SET,ChatGPT, ChatGPT
   - RULE-SET,Claude, Claude
@@ -377,6 +379,7 @@ rule-providers:
   Twitter: { <<: *domain, url: "https://gh-proxy.com/github.com/metacubex/meta-rules-dat/raw/refs/heads/meta/geo/geosite/x.mrs"} 
   电报域名: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs"} 
   TikTok: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/tiktok.mrs"} 
+  Cloudflare: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/cloudflare.mrs"} 
   代理顶级域名: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/tld-proxy.mrs"} 
   代理域名: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/gfw.mrs"} 
   直连域名: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/cn.mrs"} 
