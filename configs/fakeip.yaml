@@ -293,6 +293,7 @@ rules:
   - RULE-SET,trackerslist, 直连
   - RULE-SET,谷歌FCM, 香港智能
   - RULE-SET,谷歌cn, 直连
+  - RULE-SET,GitHub, GitHub
   - RULE-SET,微软cn, 直连
   - RULE-SET,微软云盘, 微软云盘
   - RULE-SET,微软服务, 微软服务
@@ -300,7 +301,6 @@ rules:
   - RULE-SET,苹果服务, 苹果服务
   - RULE-SET,电报域名, 电报消息
   - RULE-SET,Cloudflare, Cloudflare
-  - RULE-SET,GitHub, GitHub
   - RULE-SET,ChatGPT, ChatGPT
   - RULE-SET,Claude, Claude
   - RULE-SET,Meta AI, MetaAI
