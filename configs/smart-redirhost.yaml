@@ -22,7 +22,7 @@ proxy-providers:
     override:
 #      additional-prefix: ""                                       # 自定义节点名字前缀                  
 #      additional-suffix: ""                                       # 自定义节点名字后缀                 
-#      skip-cert-verify: true                                       # 是否跳过节点的证书验证，默认为 false
+#      skip-cert-verify: true                                      # 是否跳过节点的证书验证，默认为 false
       udp: true                                                    # 是否启用 UDP 转发，默认为 true                   
 #    filter: "(?i)新加坡|坡|狮城|SG|Singapore"                      # 订阅内节点的过滤规则，支持正则表达式  
 
@@ -34,22 +34,22 @@ port: 7890                                                         # HTTP(S) 代
 socks-port: 7891                                                   # SOCKS5 代理端口 
 redir-port: 7892                                                   # 流量转发端口   
 mixed-port: 7893                                                   # HTTP(S)&SOCKS5 混合代理端口
-tproxy-port: 7894                                                  # DNS监听端口
+tproxy-port: 7894                                                  # TProxy 代理端口（用于透明代理）
 allow-lan: true                                                    # 允许局域网
-bind-address: "*"                                                  # 局域网ip，*表示所有
+bind-address: "*"                                                  # 绑定局域网 IP，* 表示监听所有地址
 ipv6: true                                                         # ipv6，false表示关闭
-unified-delay: true                                                # 统一延迟
-tcp-concurrent: true                                               # tcp并发
+unified-delay: true                                                # 启用统一延迟，显示节点到目标站点的真实延迟
+tcp-concurrent: true                                               # 开启 TCP 并发
 log-level: info                                                    # 日志等级
 mode: rule                                                         # 运行模式
-find-process-mode: 'off'                                           # 进程匹配                #always，总是匹配             strict，自动匹配
-# interface-name: en0                                              # 绑定网卡
-global-client-fingerprint: chrome                                  # 浏览器伪装
-keep-alive-idle: 600                                               # 手机省电
-keep-alive-interval: 15                                            # 手机省电
-disable-keep-alive: false                                          # 关闭手机省电
+find-process-mode: 'off'                                           # 进程匹配模式（always: 总是匹配；strict: 严格匹配；off: 关闭）
+# interface-name: en0                                              # 强制绑定出口网卡
+global-client-fingerprint: chrome                                  # 伪装浏览器 TLS 指纹，减少被反爬拦截
+keep-alive-idle: 600                                               # TCP 空闲保持，针对移动端优化，可以给手机省电
+keep-alive-interval: 15                                            # TCP 保活探测频率（秒），维持连接不被强制断开
+disable-keep-alive: false                                          # 是否禁用保活机制（false 表示维持开启，有利于连接稳定）
 profile:
-  store-selected: true                                             # 选择的节点缓存，false表示关闭                         
+  store-selected: true                                             # 记忆上次选中的节点，重启后无需重新选择                         
   store-fake-ip: false                                             # fake-ip 缓存，false表示关闭               
 
 # 控制面板
