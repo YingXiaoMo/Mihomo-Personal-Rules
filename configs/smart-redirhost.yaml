@@ -271,25 +271,17 @@ proxy-groups:
 
 # 规则匹配
 rules:
+  # 1. 管理与DNS
   - RULE-SET,DNS, DNS服务
-
   - RULE-SET,私有域名, 直连
-  - RULE-SET,直连软件, 直连
+  - RULE-SET,私有ip, 直连,no-resolve
+
   - RULE-SET,网络测试, 网络测试
-  - RULE-SET,哔哩哔哩, 哔哩哔哩
-  - RULE-SET,游戏下载, 直连
-  - RULE-SET,游戏平台, 游戏平台
-  - RULE-SET,trackerslist, 直连
+
+  # 4. 谷歌/消息推送
   - RULE-SET,谷歌FCM, 香港智能
-  - RULE-SET,谷歌cn, 直连
-  - RULE-SET,GitHub, GitHub
-  - RULE-SET,微软cn, 直连
-  - RULE-SET,微软云盘, 微软云盘
-  - RULE-SET,微软服务, 微软服务
-  - RULE-SET,苹果cn, 直连
-  - RULE-SET,苹果服务, 苹果服务
-  - RULE-SET,电报域名, 电报消息
-  - RULE-SET,Cloudflare, Cloudflare
+
+  # 5. AI 服务
   - RULE-SET,ChatGPT, ChatGPT
   - RULE-SET,Claude, Claude
   - RULE-SET,Meta AI, MetaAI
@@ -297,21 +289,40 @@ rules:
   - RULE-SET,Gemini, Gemini
   - RULE-SET,Copilot, Copilot
   - RULE-SET,AI服务, AI服务
+
+  # 6. 特定流媒体与大厂服务
+  - RULE-SET,哔哩哔哩, 哔哩哔哩
+  - RULE-SET,电报域名, 电报消息
+  - RULE-SET,电报ip, 电报消息,no-resolve
   - RULE-SET,油管视频, 油管视频
-  - RULE-SET,谷歌域名, 谷歌服务
   - RULE-SET,Twitter, Twitter
   - RULE-SET,TikTok, TikTok
+  - RULE-SET,GitHub, GitHub
+  - RULE-SET,谷歌cn, 直连
+  - RULE-SET,谷歌域名, 谷歌服务
+  - RULE-SET,谷歌ip, 谷歌服务,no-resolve
+  - RULE-SET,苹果cn, 直连
+  - RULE-SET,苹果服务, 苹果服务
+  - RULE-SET,微软cn, 直连
+  - RULE-SET,微软云盘, 微软云盘
+  - RULE-SET,微软服务, 微软服务
+  - RULE-SET,Cloudflare, Cloudflare
+
+  # 7. 游戏相关
+  - RULE-SET,游戏下载, 直连
+  - RULE-SET,trackerslist, 直连
+  - RULE-SET,游戏平台, 游戏平台
+  - RULE-SET,游戏平台ip, 游戏平台
+
+  # 8. 通用分流规则
+  - RULE-SET,直连软件, 直连
   - RULE-SET,代理顶级域名, 代理域名
   - RULE-SET,代理域名, 代理域名
   - RULE-SET,直连域名, 直连
-  - RULE-SET,游戏平台ip, 游戏平台
-  - RULE-SET,私有ip, 直连,no-resolve
-  - RULE-SET,电报ip, 电报消息,no-resolve
-  - RULE-SET,谷歌ip, 谷歌服务,no-resolve
 
+  # 9. 最终兜底
   - RULE-SET,国内ip, 直连
   - GEOIP,CN, 直连
-
   - MATCH, 漏网之鱼
 
 
