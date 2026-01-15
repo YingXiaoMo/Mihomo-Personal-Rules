@@ -8,6 +8,7 @@
 # 连通性检查通用锚点
 Check: &Check { url: https://www.gstatic.com/generate_204, interval: 180, timeout: 5000 } 
 
+
 # 机场订阅
 proxy-providers:
   Airport1:                                                        # 添加多个机场不要重复命名
@@ -26,7 +27,9 @@ proxy-providers:
       udp: true                                                    # 是否启用 UDP 转发，默认为 true                   
 #    filter: "(?i)新加坡|坡|狮城|SG|Singapore"                      # 订阅内节点的过滤规则，支持正则表达式  
 
+
 # 要添加多个机场就把上面的整个 Airport1 块复制粘贴，改个名字就行了
+
 
 # 全局配置
 port: 7890                                                         # HTTP(S) 代理端口
@@ -51,8 +54,10 @@ profile:
   store-selected: true                                             # 记忆上次选中的节点，重启后无需重新选择                         
   store-fake-ip: false                                             # fake-ip 缓存，false表示关闭               
 
+
 # 控制面板
 #（所有插件都自带可以在设置里下载，所以不写了 ）
+
 
 # 嗅探
 sniffer:
@@ -85,6 +90,7 @@ sniffer:
     # --- 必须直连的系统服务 ---
     - "+.msftconnecttest.com"                                       # Windows 网络连通性测试
     - "+.msftncsi.com"                                              # Windows 网络状态指示器
+
 
 # 入站
 tun:
@@ -132,30 +138,33 @@ dns:
     - "+.xboxlive.com"
     - "lenovo.cname.china.cdn.lenovo.com.cn" # 联想的一些服务
 
+
 # 基础DNS服务器，必须先有它才能使用域名类型的DNS配置，因此必须为IP，此处使用阿里云DNS
 # 下面全是数字dns所以这个可以注释掉
 #  default-nameserver:      
-#    - tls://223.5.5.5
-#    - tls://223.6.6.6
+#    - tls://223.5.5.5                      # 阿里 DNS
+#    - tls://120.53.53.53                   # 这个是腾讯的 DNS，默认的119不支持这些写法 
+
 
 # 规则匹配到直连时使用的DNS，既然是可以直连的，当然要用国内DNS解析速度更快更稳定
 # 我使用下面的数据库匹配所以把这里注释掉了，需要的可以打开这个，把下面的nameserver-policy注释掉
 #  direct-nameserver:    
-#   - https://223.5.5.5/dns-query
-#   - https://119.29.29.29/dns-query
+#    - https://223.5.5.5/dns-query         
+#    - https://120.53.53.53/dns-query      
+
 
 # 解析代理节点时使用的DNS，最好设置为国内DNS，否则在代理的第一步就可能因为连接不上国外DNS而解析不出代理节点的IP，最终倒在起点
   proxy-server-nameserver:
-    - https://223.5.5.5/dns-query
-    - https://119.29.29.29/dns-query
+    - https://223.5.5.5/dns-query         # 阿里 DNS
+    - https://120.53.53.53/dns-query      # 这个是腾讯的 DNS，默认的119不支持这些写法
 
 
 # 指定域名查询的解析服务器，可使用 geosite, 优先于 nameserver/fallback 查询
   nameserver-policy:
     # 国内域名 -> 正常双栈
     "geosite:cn,private,steam@cn":
-      - https://223.5.5.5/dns-query
-      - https://119.29.29.29/dns-query
+      - https://223.5.5.5/dns-query         # 阿里 DNS
+      - https://120.53.53.53/dns-query      # 这个是腾讯的 DNS，默认的119不支持这些写法
 
 
 # 在访问的国外网站没有匹配到任何域名规则，最终走了MATCH兜底规则时使用的DNS，为了确保不发生DNS泄漏和DNS污染，必须使用国外DNS
@@ -178,6 +187,7 @@ JP: &JP { filter: "(?i)日本|jp|japan" }
 TW: &TW { filter: "(?i)台|台湾|tw|taiwan" } 
 ZJ: &ZJ { filter: "(?i)(自建|workers)(?!.*移动)" }                # 这里只会匹配自建和workers，不会匹配移动自建，既然是自建节点，改个名字就行了
 Other: &Other { filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨🇳|港|hk|hongkong|台|tw|taiwan|日|直连|jp|japan|新|sg|singapore|美|us|unitedstates)).*" } 
+
 
 # 节点分组锚点
 # Select 策略通用模板 (用于手动选择)
@@ -231,6 +241,7 @@ proxy-groups:
 # - { name: 轮询负载, <<: *RR, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Round_Robin.png" }
 # - { name: 散列负载, <<: *CH, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Final.png" }
 
+
 # 手动选择
   - { name: 新加坡手动, <<: *Select, <<: *Check, <<: *SG, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png" }
   - { name: 香港手动, <<: *Select, <<: *Check, <<: *HK, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png" }
@@ -240,8 +251,10 @@ proxy-groups:
   - { name: 其他手动, <<: *Select, <<: *Check, <<: *Other, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
   - { name: 自建手动, <<: *Select, <<: *Check,<<: *ZJ, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png"}
 
+
 # dns
   - { name: DNS服务, type: url-test, <<: *Check, hidden: true, proxies: [ 新加坡自动, 香港自动 ], icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Area.png"}
+
 
 # 故障转移 
 # - { name: 新加坡故转, <<: *Fallback, proxies: [ 新加坡自动, 新加坡手动 ], icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
@@ -252,6 +265,7 @@ proxy-groups:
 # - { name: 其他故转, <<: *Fallback, proxies: [ 其他自动, 其他手动 ], icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
 # - { name: 自建故转, <<: *Fallback, proxies: [ 自建自动, 自建手动 ], icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png"}
 
+
 # 自动选择
   - { name: 新加坡自动, <<: *Url-Test, <<: *SG, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
   - { name: 香港自动, <<: *Url-Test, <<: *HK, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
@@ -261,6 +275,7 @@ proxy-groups:
 # - { name: 其他自动, <<: *Url-Test, <<: *Other, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
 # - { name: 自建自动, <<: *Url-Test, <<: *ZJ, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png"}
 
+
 # 轮询负载 
 # - { name: 新加坡轮询, <<: *RR, <<: *SG, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
 # - { name: 香港轮询, <<: *RR, <<: *HK, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Hong_Kong.png"}
@@ -269,6 +284,7 @@ proxy-groups:
 # - { name: 美国轮询, <<: *RR, <<: *US, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/United_States.png"}
 # - { name: 其他轮询, <<: *RR, <<: *Other, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Puzzle.png"}
 # - { name: 自建轮询, <<: *RR, <<: *ZJ, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Daily.png" }
+
 
 # 散列负载 
  - { name: 新加坡散列, <<: *CH, <<: *SG, icon: "https://fastly.jsdelivr.net/gh/YingXiaoMo/Mihomo-Personal-Rules@main/icons/Singapore.png"}
@@ -343,6 +359,7 @@ rule-anchor:
   domain: &domain {type: http, interval: 86400, behavior: domain, format: mrs}
   domain_text: &domain_text {type: http, interval: 86400, behavior: domain, format: text} 
   class: &class {type: http, interval: 86400, behavior: classical, format: text}
+
 
 rule-providers: 
   DNS: { <<: *class, url: "https://raw.githubusercontent.com/yingxiaomo/Mihomo-Personal-Rules/refs/heads/main/rules/proxydns.list"} 
