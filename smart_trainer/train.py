@@ -237,7 +237,9 @@ def preprocess_data(df, feature_order):
 
     raw_speed = df['maxdownloadrate_kb'].fillna(0).clip(lower=0)
     
-    speed_score = np.log1p(raw_speed)
+# 提高速度的权重系数 (1.0 -> 1.2)，优先保证大带宽节点的评分
+    speed_score = np.log1p(raw_speed) * 1.2
+    
     failure_penalty = 0.5 ** df['failure'].fillna(0)
     latency = df['latency'].fillna(5000)
     latency_penalty = 1.0 / (1.0 + np.exp((latency - 500) / 100))
@@ -332,7 +334,9 @@ def run_training():
     args = parser.parse_args()
 
     feature_order = get_feature_order()
-    df = load_data(args.data_dir)
+    
+    # 显式指定 days=15，只加载最近15天数据，防止旧数据干扰
+    df = load_data(args.data_dir, days=15)
 
     X, y, w, scalers = preprocess_data(df, feature_order)
     
