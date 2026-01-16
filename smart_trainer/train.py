@@ -221,7 +221,8 @@ def load_data(data_dir, days=30):
     if not dfs:
         raise ValueError("没有可用的数据被加载")
 
-    merged_df = pd.concat(dfs, ignore_index=True)
+    # 先用 dropna 清理掉空列，再合并
+    merged_df = pd.concat([d.dropna(axis=1, how='all') for d in dfs], ignore_index=True)
     merged_df = merged_df.sort_values('__age_hours', ascending=False).reset_index(drop=True)
     print(f"📊 数据加载完成，共 {len(merged_df)} 条记录")
     return merged_df
