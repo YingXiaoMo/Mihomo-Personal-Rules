@@ -46,6 +46,7 @@ mode: rule                                                         # 运行模�
 find-process-mode: 'off'                                           # 进程匹配模式（always: 总是匹配；strict: 严格匹配；off: 关闭）
 # interface-name: en0                                              # 强制绑定出口网卡
 global-client-fingerprint: chrome                                  # 伪装浏览器 TLS 指纹，减少被反爬拦截
+global-ua: clash.meta                                              # 自定义外部资源下载时使用的的 UA，默认为 clash.meta
 keep-alive-idle: 600                                               # TCP 空闲保持，针对移动端优化，可以给手机省电
 keep-alive-interval: 15                                            # TCP 保活探测频率（秒），维持连接不被强制断开
 disable-keep-alive: false                                          # 是否禁用保活机制（false 表示维持开启，有利于连接稳定）
@@ -165,17 +166,17 @@ Other: &Other { filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨�
 # Select 策略通用模板 (用于手动选择)
 Select: &Select { type: select, include-all: true, exclude-type: direct  } 
 # Smart 策略通用模板 (用于智能选择)
-Smart: &Smart { type: smart, include-all: true, uselightgbm: true, collectdata: true, strategy: sticky-sessions, hidden: true, <<: *Check, exclude-type: direct }
+Smart: &Smart { type: smart, include-all: true, uselightgbm: true, collectdata: true, strategy: sticky-sessions, hidden: true, tolerance: 50, <<: *Check, exclude-type: direct }
 # Url-Test 策略通用模板 (用于自动选择)
-Url-Test: &Url-Test { type: url-test, include-all: true, <<: *Check, hidden: true, exclude-type: direct }
+Url-Test: &Url-Test { type: url-test, include-all: true, <<: *Check, tolerance: 50, hidden: true, exclude-type: direct }
 # Fallback 策略通用模板 (用于故障转移)
 Fallback: &Fallback { type: fallback, <<: *Check, hidden: true, lazy: false }
 # Round-Robin 策略通用模板 (用于轮询负载均衡)
 # 轮询会循环使用列表中的节点，适用于需要平均分配负载的场景
-RR: &RR { type: load-balance, strategy: round-robin, include-all: true, <<: *Check,hidden: true, exclude-type: direct }
+RR: &RR { type: load-balance, strategy: round-robin, include-all: true, tolerance: 50, <<: *Check,hidden: true, exclude-type: direct }
 # Load-Balance (散列) 策略通用模板
 # 适用于需要保持客户端连接一致性（例如，防止频繁切换 IP 导致登录失效）的场景
-CH: &CH { type: load-balance, strategy: consistent-hashing, include-all: true, <<: *Check,hidden: true, exclude-type: direct }
+CH: &CH { type: load-balance, strategy: consistent-hashing, include-all: true, tolerance: 50,<<: *Check,hidden: true, exclude-type: direct }
 
 # 锚点里面的 hidden: true 表示隐藏这个代理组，不会在代理列表中显示，但仍然可以在规则中使用它们。适合用于不需要手动更改的分组，比如自动选择、智能选择等。
 
@@ -304,14 +305,14 @@ rules:
   # 6. 特定流媒体与大厂服务
   - RULE-SET,哔哩哔哩, 哔哩哔哩
   - RULE-SET,电报域名, 电报消息
-  - RULE-SET,电报ip, 电报消息,no-resolve
+  - RULE-SET,电报ip, 电报消息, no-resolve
   - RULE-SET,油管视频, 油管视频
   - RULE-SET,Twitter, Twitter
   - RULE-SET,TikTok, TikTok
   - RULE-SET,GitHub, GitHub
   - RULE-SET,谷歌cn, 直连
   - RULE-SET,谷歌域名, 谷歌服务
-  - RULE-SET,谷歌ip, 谷歌服务,no-resolve
+  - RULE-SET,谷歌ip, 谷歌服务, no-resolve
   - RULE-SET,苹果cn, 直连
   - RULE-SET,苹果服务, 苹果服务
   - RULE-SET,微软cn, 直连
@@ -322,7 +323,7 @@ rules:
   # 7. 游戏相关
   - RULE-SET,游戏下载, 直连
   - RULE-SET,trackerslist, 直连
-  - RULE-SET,游戏平台, 游戏平台
+  - RULE-SET,游戏平台, 游戏平台, no-resolve
   - RULE-SET,游戏平台ip, 游戏平台
 
   # 8. 通用分流规则
@@ -332,7 +333,7 @@ rules:
   - RULE-SET,直连域名, 直连
 
   # 9. 最终兜底
-  - RULE-SET,国内ip, 直连
+  - RULE-SET,国内ip, 直连, no-resolve
   - GEOIP,CN, 直连
   - MATCH, 漏网之鱼
 
