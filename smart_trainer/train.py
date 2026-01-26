@@ -62,7 +62,7 @@ LGBM_PARAMS = {
     'metric': 'rmse',
     'boosting_type': 'gbdt',
     'n_estimators': 10000,       
-    'learning_rate': 0.05,       
+    'learning_rate': 0.03,       
     'num_leaves': 31,            
     'max_depth': -1,
     'min_child_samples': 20,
@@ -221,7 +221,6 @@ def load_data(data_dir, days=30):
     if not dfs:
         raise ValueError("没有可用的数据被加载")
 
-    # 先用 dropna 清理掉空列，再合并
     merged_df = pd.concat([d.dropna(axis=1, how='all') for d in dfs], ignore_index=True)
     merged_df = merged_df.sort_values('__age_hours', ascending=False).reset_index(drop=True)
     print(f"📊 数据加载完成，共 {len(merged_df)} 条记录")
@@ -236,10 +235,10 @@ def preprocess_data(df, feature_order):
          else:
             raise ValueError("数据中缺少速度列 (maxdownloadrate_kb)")
 
-    raw_speed = df['maxdownloadrate_kb'].fillna(0).clip(lower=0)
+    raw_speed = df['maxdownloadrate_kb'].fillna(0).clip(lower=0) * 1000
     
-# 提高速度的权重系数 (1.0 -> 1.2)，优先保证大带宽节点的评分
-    speed_score = np.log1p(raw_speed) * 1.2
+# 提高速度的权重系数 (1.0 -> 1.5)，优先保证大带宽节点的评分
+    speed_score = np.log1p(raw_speed) * 1.5
     
     failure_penalty = 0.5 ** df['failure'].fillna(0)
     latency = df['latency'].fillna(5000)
@@ -336,7 +335,6 @@ def run_training():
 
     feature_order = get_feature_order()
     
-    # 显式指定 days=15，只加载最近15天数据，防止旧数据干扰
     df = load_data(args.data_dir, days=15)
 
     X, y, w, scalers = preprocess_data(df, feature_order)
