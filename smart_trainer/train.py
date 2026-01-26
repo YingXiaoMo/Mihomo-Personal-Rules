@@ -242,7 +242,7 @@ def preprocess_data(df, feature_order):
     
     failure_penalty = 0.5 ** df['failure'].fillna(0)
     latency = df['latency'].fillna(5000)
-    latency_penalty = 1.0 / (1.0 + np.exp((latency - 500) / 100))
+    latency_penalty = 1.0 / (1.0 + np.exp((latency - 400) / 100))
 
     df['target_y'] = speed_score * failure_penalty * latency_penalty
     
